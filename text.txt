@@ -1,0 +1,1681 @@
+{ "mod": { "nome": "Cataclismo Natural - Edicao Realista 3D", "mod_id":
+"cataclismomod", "versao_mod": "2.0.0", "versao_minecraft": "1.20.1", "loader":
+"Forge 1.20.1 (47.3.0)", "java_necessario": "JDK 17", "novidades_desta_versao":
+[ "Textura propria 32x32 gerada no build.", "Renderizacao 3D volumetrica
+realista em OpenGL.", "Tornado 3D curvo com supercelula e raios.", "Neblina
+atmosferica e tremor de camera.", "Efeitos 3D exclusivos nos 16 desastres." ],
+"item_principal": { "id": "cataclismomod:disaster_controller", "nome":
+"Controlador de Cataclismos", "textura_propria":
+"cataclismomod:item/disaster_controller", "como_conseguir": [ "Criativo:
+Ferramentas e Utilidades", "Comando: /give @p
+cataclismomod:disaster_controller", "Mesa de Trabalho: Diamante, Redstone,
+Bussola, Obsidiana" ], "controles": [ "Shift + Clique Direito: alterna os 16
+desastres", "Clique Direito: ativa, troca ou encerra o desastre" ] },
+"total_desastres": 16, "total_arquivos": 16 }, "arquivos_do_projeto": [ {
+"ordem": 1, "caminho": "settings.gradle", "conteudo": "pluginManagement {\n
+repositories {\n gradlePluginPortal()\n maven {\n name = 'MinecraftForge'\n url
+= 'https://maven.minecraftforge.net/'\n }\n }\n}\n\nplugins {\n id
+'org.gradle.toolchains.foojay-resolver-convention' version
+'0.7.0'\n}\n\nrootProject.name = 'cataclismomod'\n" }, { "ordem": 2, "caminho":
+"gradle.properties", "conteudo":
+"org.gradle.jvmargs=-Xmx3G\norg.gradle.daemon=false\n\nminecraft_version=1.20.1\nminecraft_version_range=[1.20.1,1.21)\nforge_version=47.3.0\nforge_version_range=[47,)\nloader_version_range=[47,)\nmapping_channel=official\nmapping_version=1.20.1\n\nmod_id=cataclismomod\nmod_name=Cataclismo
+Natural\nmod_license=MIT\nmod_version=2.0.0\nmod_group_id=com.cataclismo.cataclismomod\nmod_authors=CataclismoDev\nmod_description=Mod
+de desastres naturais realistas com renderizacao 3D volumetrica e textura
+propria para Minecraft 1.20.1 Forge.\n" }, { "ordem": 3, "caminho":
+"build.gradle", "conteudo": "plugins {\n id 'eclipse'\n id 'idea'\n id
+'maven-publish'\n id 'net.minecraftforge.gradle' version
+'[6.0.24,6.2)'\n}\n\nversion = mod_version\ngroup = mod_group_id\n\nbase {\n
+archivesName = mod_id\n}\n\njava.toolchain.languageVersion =
+JavaLanguageVersion.of(17)\n\nminecraft {\n mappings channel: mapping_channel,
+version: mapping_version\n copyIdeResources = true\n\n runs {\n configureEach
+{\n workingDirectory project.file('run')\n property 'forge.logging.markers',
+'REGISTRIES'\n property 'forge.logging.console.level', 'debug'\n mods {\n
+cataclismomod {\n source sourceSets.main\n }\n }\n }\n client {}\n server {\n
+args '--nogui'\n }\n }\n}\n\ndependencies {\n minecraft
+\u0022net.minecraftforge:forge:{minecraft_version}-{forge_version}\u0022\n}\n\ntasks.register('generateModTextures')
+{\n def outFile =
+file('src/main/resources/assets/cataclismomod/textures/item/disaster_controller.png')\n
+outputs.file(outFile)\n doLast {\n System.setProperty('java.awt.headless',
+'true')\n outFile.parentFile.mkdirs()\n int size = 32\n def img = new
+java.awt.image.BufferedImage(size, size,
+java.awt.image.BufferedImage.TYPE_INT_ARGB)\n double cx = 15.5\n double cy
+= 15.5\n for (int y = 0; y < size; y++) {\n for (int x = 0; x < size; x++) {\n
+double dx = x - cx\n double dy = y - cy\n double dist = Math.sqrt(dx * dx + dy *
+dy)\n double angle = Math.atan2(dy, dx)\n int argb = 0\n\n boolean nsSpike =
+Math.abs(dx) <= (15.6 - Math.abs(dy)) * 0.44 && Math.abs(dy) >= 10.6 &&
+Math.abs(dy) <= 15.3\n boolean ewSpike = Math.abs(dy) <= (15.6 - Math.abs(dx))
+* 0.44 && Math.abs(dx) >= 10.6 && Math.abs(dx) <= 15.3\n boolean diagPin =
+Math.abs(Math.abs(dx) - Math.abs(dy)) <= 1.25 && dist >= 10.6 && dist
+<= 13.7\n\n if (dist <= 9.6) {\n double swirl = Math.sin(angle * 3.0 + dist
+* 0.88) * 0.5 + 0.5\n double vortex = Math.cos(angle * 2.0 - dist * 1.15) * 0.5
++ 0.5\n int r = (int) (14 + swirl * 26 + vortex * 36)\n int g = (int) (34 +
+swirl * 124 + vortex * 84)\n int b = (int) (78 + swirl * 142 + vortex * 34)\n\n
+if (dist < 2.7) {\n double core = 1.0 - (dist / 2.7)\n r = (int) Math.min(255, r
++ core * 215)\n g = (int) Math.min(255, g + core * 238)\n b = (int)
+Math.min(255, b + core * 248)\n }\n\n if (dy > 2.0 && dist > 4.4 && dist < 8.9
+&& swirl > 0.46) {\n double fireMix = Math.min(1.0, (dy - 2.0) / 5.5)\n r =
+(int) (r * (1.0 - fireMix) + 255 * fireMix)\n g = (int) (g * (1.0 - fireMix)
++ 112 * fireMix)\n b = (int) (b * (1.0 - fireMix) + 28 * fireMix)\n }\n\n if
+(dist > 8.1) {\n double shade = Math.max(0.25, 1.0 - ((dist - 8.1) / 2.1))\n r =
+(int) (r * shade)\n g = (int) (g * shade)\n b = (int) (b * shade)\n }\n\n double
+hx = x - 11.8\n double hy = y - 11.3\n if (hx * hx + hy * hy < 3.5) {\n r =
+Math.min(255, r + 145)\n g = Math.min(255, g + 165)\n b = Math.min(255, b
++ 178)\n }\n argb = (0xFF << 24) | ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b
+& 0xFF)\n } else if (dist <= 11.6) {\n double light = 0.65 + 0.35 * ((-dx - dy)
+/ 16.0)\n int r = (int) Math.max(45, Math.min(255, 232 * light))\n int g = (int)
+Math.max(28, Math.min(255, 176 * light))\n int b = (int) Math.max(12,
+Math.min(255, 52 * light))\n argb = (0xFF << 24) | ((r & 0xFF) << 16) | ((g
+& 0xFF) << 8) | (b & 0xFF)\n } else if (dist <= 12.8) {\n argb = (dx + dy < 0) ?
+((0xFF << 24) | 0x3C2B59) : ((0xFF << 24) | 0x1A1128)\n } else if (nsSpike ||
+ewSpike) {\n double tip = Math.max(Math.abs(dx), Math.abs(dy))\n if (tip > 13.7)
+{\n argb = (0xFF << 24) | 0x7CF4FF\n } else if (dx + dy < 0) {\n argb = (0xFF
+<< 24) | 0xFFE066\n } else {\n argb = (0xFF << 24) | 0xC9841B\n }\n } else if
+(diagPin) {\n argb = (dist > 12.6) ? ((0xFF << 24) | 0xFF7824) : ((0xFF << 24)
+| 0x4A3369)\n }\n img.setRGB(x, y, argb)\n }\n }\n
+javax.imageio.ImageIO.write(img, 'png', outFile)\n
+}\n}\n\ntasks.named('processResources').configure {\n dependsOn
+'generateModTextures'\n}\n\ntasks.named('jar', Jar).configure {\n manifest {\n
+attributes([\n 'Specification-Title' : mod_id,\n 'Specification-Vendor' :
+mod_authors,\n 'Specification-Version' : '1',\n 'Implementation-Title' :
+project.name,\n 'Implementation-Version' : mod_version,\n
+'Implementation-Vendor' : mod_authors,\n 'Implementation-Timestamp': new
+Date().format(\u0022yyyy-MM-dd'T'HH:mm:ssZ\u0022)\n ])\n }\n finalizedBy
+'reobfJar'\n}\n\ntasks.withType(JavaCompile).configureEach {\n options.encoding
+= 'UTF-8'\n}\n" }, { "ordem": 4, "caminho":
+"src/main/resources/META-INF/mods.toml", "conteudo":
+"modLoader=\u0022javafml\u0022\nloaderVersion=\u0022[47,)\u0022\nlicense=\u0022MIT\u0022\n\n[[mods]]\nmodId=\u0022cataclismomod\u0022\nversion=\u00222.0.0\u0022\ndisplayName=\u0022Cataclismo
+Natural 3D\u0022\nauthors=\u0022CataclismoDev\u0022\ndescription='''\nMod de
+desastres naturais ultra-realistas com renderizacao 3D volumetrica nao-cubica,
+neblina atmosferica, tremor de camera, raios ramificados e textura propria do
+Controlador de Cataclismos!\n'''\n\n[[dependencies.cataclismomod]]\n
+modId=\u0022forge\u0022\n mandatory=true\n versionRange=\u0022[47,)\u0022\n
+ordering=\u0022NONE\u0022\n
+side=\u0022BOTH\u0022\n\n[[dependencies.cataclismomod]]\n
+modId=\u0022minecraft\u0022\n mandatory=true\n
+versionRange=\u0022[1.20.1,1.21)\u0022\n ordering=\u0022NONE\u0022\n
+side=\u0022BOTH\u0022\n" }, { "ordem": 5, "caminho":
+"src/main/resources/pack.mcmeta", "conteudo": "{\n \u0022pack\u0022: {\n
+\u0022description\u0022: \u0022Recursos do mod Cataclismo Natural 3D\u0022,\n
+\u0022pack_format\u0022: 15\n }\n}\n" }, { "ordem": 6, "caminho":
+"src/main/resources/assets/cataclismomod/lang/pt_br.json", "conteudo": "{\n
+\u0022item.cataclismomod.disaster_controller\u0022: \u0022Controlador de
+Cataclismos\u0022\n}\n" }, { "ordem": 7, "caminho":
+"src/main/resources/assets/cataclismomod/lang/en_us.json", "conteudo": "{\n
+\u0022item.cataclismomod.disaster_controller\u0022: \u0022Cataclysm
+Controller\u0022\n}\n" }, { "ordem": 8, "caminho":
+"src/main/resources/assets/cataclismomod/models/item/disaster_controller.json",
+"conteudo": "{\n \u0022parent\u0022: \u0022minecraft:item/generated\u0022,\n
+\u0022textures\u0022: {\n \u0022layer0\u0022:
+\u0022cataclismomod:item/disaster_controller\u0022\n }\n}\n" }, { "ordem": 9,
+"caminho":
+"src/main/resources/data/cataclismomod/recipes/disaster_controller.json",
+"conteudo": "{\n \u0022type\u0022: \u0022minecraft:crafting_shaped\u0022,\n
+\u0022category\u0022: \u0022equipment\u0022,\n \u0022pattern\u0022: [\n \u0022 D
+\u0022,\n \u0022RCR\u0022,\n \u0022 O \u0022\n ],\n \u0022key\u0022: {\n
+\u0022D\u0022: {\n \u0022item\u0022: \u0022minecraft:diamond\u0022\n },\n
+\u0022R\u0022: {\n \u0022item\u0022: \u0022minecraft:redstone\u0022\n },\n
+\u0022C\u0022: {\n \u0022item\u0022: \u0022minecraft:compass\u0022\n },\n
+\u0022O\u0022: {\n \u0022item\u0022: \u0022minecraft:obsidian\u0022\n }\n },\n
+\u0022result\u0022: {\n \u0022item\u0022:
+\u0022cataclismomod:disaster_controller\u0022,\n \u0022count\u0022: 1\n }\n}\n"
+}, { "ordem": 10, "caminho":
+"src/main/java/com/cataclismo/cataclismomod/CataclismoMod.java", "conteudo":
+"package com.cataclismo.cataclismomod;\n\nimport
+net.minecraft.world.item.CreativeModeTabs;\nimport
+net.minecraft.world.item.Item;\nimport net.minecraft.world.item.Rarity;\nimport
+net.minecraftforge.common.MinecraftForge;\nimport
+net.minecraftforge.event.BuildCreativeModeTabContentsEvent;\nimport
+net.minecraftforge.eventbus.api.IEventBus;\nimport
+net.minecraftforge.fml.common.Mod;\nimport
+net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;\nimport
+net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;\nimport
+net.minecraftforge.registries.DeferredRegister;\nimport
+net.minecraftforge.registries.ForgeRegistries;\nimport
+net.minecraftforge.registries.RegistryObject;\n\n@Mod(CataclismoMod.MOD_ID)\npublic
+class CataclismoMod {\n public static final String MOD_ID =
+\u0022cataclismomod\u0022;\n\n public static final DeferredRegister ITEMS =\n
+DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);\n\n public static final
+RegistryObject DISASTER_CONTROLLER = ITEMS.register(\n
+\u0022disaster_controller\u0022,\n () -> new DisasterControllerItem(new
+Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant())\n );\n\n
+public CataclismoMod() {\n IEventBus modEventBus =
+FMLJavaModLoadingContext.get().getModEventBus();\n
+ITEMS.register(modEventBus);\n modEventBus.addListener(this::commonSetup);\n
+modEventBus.addListener(this::addCreative);\n
+MinecraftForge.EVENT_BUS.register(DisasterManager.class);\n }\n\n private void
+commonSetup(FMLCommonSetupEvent event) {\n
+event.enqueueWork(DisasterNetwork::register);\n }\n\n private void
+addCreative(BuildCreativeModeTabContentsEvent event) {\n if (event.getTabKey()
+== CreativeModeTabs.TOOLS_AND_UTILITIES) {\n
+event.accept(DISASTER_CONTROLLER.get());\n }\n }\n}\n" }, { "ordem": 11,
+"caminho": "src/main/java/com/cataclismo/cataclismomod/DisasterType.java",
+"conteudo": "package com.cataclismo.cataclismomod;\n\nimport
+net.minecraft.ChatFormatting;\nimport net.minecraft.world.BossEvent;\n\npublic
+enum DisasterType {\n EARTHQUAKE(\n \u0022Terremoto (Magnitude 8.2)\u0022,\n
+\u0022Abalos sismicos intensos, tremor de camera, fissuras no chao e desabamento
+de tetos.\u0022,\n BossEvent.BossBarColor.YELLOW,\n
+ChatFormatting.GOLD,\n 900,\n false\n ),\n TORNADO(\n \u0022Tornado
+(EF5)\u0022,\n \u0022Supercelula gigante, funil 3D volumetrico curvo com raios
+ramificados, nuvem de destrocos e succao ciclonica.\u0022,\n
+BossEvent.BossBarColor.WHITE,\n ChatFormatting.GRAY,\n 1200,\n true\n ),\n
+TSUNAMI(\n \u0022Tsunami (Onda Gigante)\u0022,\n \u0022Muralha oceanica 3D
+curvada com crista de espuma avancando e inundando vales.\u0022,\n
+BossEvent.BossBarColor.BLUE,\n ChatFormatting.AQUA,\n 900,\n true\n ),\n
+VOLCANIC_ERUPTION(\n \u0022Erupcao Vulcanica\u0022,\n \u0022Cratera de basalto
+com coluna piroclastica gigante de cinzas, raios vulcanicos e bombas de
+magma.\u0022,\n BossEvent.BossBarColor.RED,\n ChatFormatting.DARK_RED,\n 1200,\n
+true\n ),\n METEOR_SHOWER(\n \u0022Chuva de Meteoros\u0022,\n \u0022Cometas 3D
+incandescentes rasgam o ceu criando crateras explosivas com magma e
+minerios.\u0022,\n BossEvent.BossBarColor.RED,\n ChatFormatting.RED,\n 1000,\n
+true\n ),\n ACID_RAIN(\n \u0022Chuva Acida\u0022,\n \u0022Neblina toxica
+esverdeada e chuva corrosiva que envenena, oxida cobre e desgasta
+armaduras.\u0022,\n BossEvent.BossBarColor.GREEN,\n
+ChatFormatting.GREEN,\n 1200,\n true\n ),\n BLIZZARD(\n \u0022Nevasca
+Polar\u0022,\n \u0022Tempestade glacial com cortinas de neve 3D, hipotermia
+real, congelamento de agua e neblina branca.\u0022,\n
+BossEvent.BossBarColor.WHITE,\n ChatFormatting.WHITE,\n 1200,\n false\n ),\n
+HEATWAVE(\n \u0022Onda de Calor e Seca\u0022,\n \u0022Atmosfera escaldante que
+evapora agua, seca a vegetacao, causa insolacao e focos de incendio.\u0022,\n
+BossEvent.BossBarColor.YELLOW,\n ChatFormatting.GOLD,\n 1200,\n false\n ),\n
+SANDSTORM(\n \u0022Tempestade de Areia (Haboob)\u0022,\n \u0022Muralha 3D de
+poeira e ventos abrasivos que cegam, empurram e formam dunas reais.\u0022,\n
+BossEvent.BossBarColor.YELLOW,\n ChatFormatting.YELLOW,\n 1100,\n true\n ),\n
+SUPERCELL_STORM(\n \u0022Supercelula Eletrica\u0022,\n \u0022Teto de nuvens
+giratorias gigantes disparando raios 3D ramificados atraidos por metal e pontos
+altos.\u0022,\n BossEvent.BossBarColor.PURPLE,\n
+ChatFormatting.LIGHT_PURPLE,\n 1100,\n true\n ),\n HAILSTORM(\n \u0022Tempestade
+de Granizo\u0022,\n \u0022Supercelula esverdeada despejando pedras de gelo que
+quebram vidros, folhas e plantacoes.\u0022,\n BossEvent.BossBarColor.BLUE,\n
+ChatFormatting.BLUE,\n 1000,\n false\n ),\n HURRICANE(\n \u0022Furacao
+(Categoria 5)\u0022,\n \u0022Parede de nuvens ciclonicas, rajadas extremas,
+chuva torrencial, raios e destrocos voadores.\u0022,\n
+BossEvent.BossBarColor.BLUE,\n ChatFormatting.DARK_AQUA,\n 1200,\n true\n ),\n
+LANDSLIDE(\n \u0022Deslizamento de Terra\u0022,\n \u0022Encostas encharcadas
+viram lama e despencam morro abaixo em avalanches com tremores.\u0022,\n
+BossEvent.BossBarColor.YELLOW,\n ChatFormatting.DARK_GREEN,\n 1000,\n false\n
+),\n SINKHOLE(\n \u0022Sumidouro Geologico\u0022,\n \u0022Colapso subterraneo
+progressivo com nevoa de poeira e tremor de camera engolindo o solo.\u0022,\n
+BossEvent.BossBarColor.RED,\n ChatFormatting.DARK_GRAY,\n 800,\n false\n ),\n
+WILDFIRE(\n \u0022Incendio Florestal\u0022,\n \u0022Colunas de fumaca densa e
+fogo alastrado pelo vento com brasas voadoras.\u0022,\n
+BossEvent.BossBarColor.RED,\n ChatFormatting.RED,\n 1100,\n true\n ),\n
+SOLAR_FLARE(\n \u0022Tempestade Solar\u0022,\n \u0022Cortinas 3D de aurora
+geomagnetica no ceu que queimam redstone e exigem abrigo sob teto.\u0022,\n
+BossEvent.BossBarColor.PINK,\n ChatFormatting.LIGHT_PURPLE,\n 1000,\n false\n
+);\n\n private final String displayName;\n private final String description;\n
+private final BossEvent.BossBarColor bossBarColor;\n private final
+ChatFormatting textColor;\n private final int durationTicks;\n private final
+boolean darkenScreen;\n\n DisasterType(String displayName, String description,
+BossEvent.BossBarColor bossBarColor,\n ChatFormatting textColor, int
+durationTicks, boolean darkenScreen) {\n this.displayName = displayName;\n
+this.description = description;\n this.bossBarColor = bossBarColor;\n
+this.textColor = textColor;\n this.durationTicks = durationTicks;\n
+this.darkenScreen = darkenScreen;\n }\n\n public String getDisplayName() {\n
+return displayName;\n }\n\n public String getDescription() {\n return
+description;\n }\n\n public BossEvent.BossBarColor getBossBarColor() {\n return
+bossBarColor;\n }\n\n public ChatFormatting getTextColor() {\n return
+textColor;\n }\n\n public int getDurationTicks() {\n return durationTicks;\n
+}\n\n public boolean shouldDarkenScreen() {\n return darkenScreen;\n }\n\n
+public DisasterType next() {\n DisasterType[] all = values();\n return
+all[(this.ordinal() + 1) % all.length];\n }\n\n public static DisasterType
+byIndex(int index) {\n DisasterType[] all = values();\n if (index < 0 || index
+>= all.length) {\n return EARTHQUAKE;\n }\n return all[index];\n }\n}\n" }, {
+"ordem": 12, "caminho":
+"src/main/java/com/cataclismo/cataclismomod/DisasterControllerItem.java",
+"conteudo": "package com.cataclismo.cataclismomod;\n\nimport
+java.util.List;\nimport javax.annotation.Nullable;\nimport
+net.minecraft.ChatFormatting;\nimport net.minecraft.nbt.CompoundTag;\nimport
+net.minecraft.network.chat.Component;\nimport
+net.minecraft.server.level.ServerLevel;\nimport
+net.minecraft.sounds.SoundEvents;\nimport
+net.minecraft.sounds.SoundSource;\nimport
+net.minecraft.world.InteractionHand;\nimport
+net.minecraft.world.InteractionResultHolder;\nimport
+net.minecraft.world.entity.player.Player;\nimport
+net.minecraft.world.item.Item;\nimport
+net.minecraft.world.item.ItemStack;\nimport
+net.minecraft.world.item.TooltipFlag;\nimport
+net.minecraft.world.level.Level;\n\npublic class DisasterControllerItem extends
+Item {\n private static final String TAG_DISASTER =
+\u0022SelectedDisaster\u0022;\n\n public DisasterControllerItem(Properties
+properties) {\n super(properties);\n }\n\n public static DisasterType
+getSelectedDisaster(ItemStack stack) {\n CompoundTag tag = stack.getTag();\n if
+(tag != null && tag.contains(TAG_DISASTER)) {\n return
+DisasterType.byIndex(tag.getInt(TAG_DISASTER));\n }\n return
+DisasterType.TORNADO;\n }\n\n public static void setSelectedDisaster(ItemStack
+stack, DisasterType type) {\n stack.getOrCreateTag().putInt(TAG_DISASTER,
+type.ordinal());\n }\n\n @Override\n public InteractionResultHolder use(Level
+level, Player player, InteractionHand hand) {\n ItemStack stack =
+player.getItemInHand(hand);\n DisasterType selected =
+getSelectedDisaster(stack);\n\n if (player.isShiftKeyDown()) {\n DisasterType
+next = selected.next();\n setSelectedDisaster(stack, next);\n if
+(!level.isClientSide()) {\n Component msg = Component.literal(\u0022Desastre
+(\u0022 + (next.ordinal() + 1) + \u0022/\u0022 + DisasterType.values().length +
+\u0022): \u0022)\n .withStyle(ChatFormatting.GRAY)\n
+.append(Component.literal(next.getDisplayName()).withStyle(next.getTextColor(),
+ChatFormatting.BOLD));\n player.displayClientMessage(msg, true);\n
+level.playSound((Player) null, player.getX(), player.getY(), player.getZ(),\n
+SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.7F, 1.25F);\n }\n
+return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());\n
+}\n\n if (!level.isClientSide() && level instanceof ServerLevel serverLevel) {\n
+if (DisasterManager.isActive(serverLevel) &&
+DisasterManager.getActiveType(serverLevel) == selected) {\n
+DisasterManager.stopDisaster(serverLevel, true);\n level.playSound((Player)
+null, player.getX(), player.getY(), player.getZ(),\n
+SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.9F, 0.9F);\n } else {\n
+DisasterManager.startDisaster(serverLevel, selected, player.blockPosition(),
+player.getLookAngle());\n level.playSound((Player) null, player.getX(),
+player.getY(), player.getZ(),\n SoundEvents.BEACON_ACTIVATE,
+SoundSource.PLAYERS, 0.9F, 0.85F);\n }\n
+player.getCooldowns().addCooldown(this, 15);\n }\n\n return
+InteractionResultHolder.sidedSuccess(stack, level.isClientSide());\n }\n\n
+@Override\n public Component getName(ItemStack stack) {\n DisasterType selected
+= getSelectedDisaster(stack);\n return Component.literal(\u0022Controlador de
+Cataclismos\u0022)\n .withStyle(ChatFormatting.GOLD)\n
+.append(Component.literal(\u0022 [\u0022 + selected.getDisplayName() +
+\u0022]\u0022).withStyle(selected.getTextColor()));\n }\n\n @Override\n public
+boolean isFoil(ItemStack stack) {\n return true;\n }\n\n @Override\n public void
+appendHoverText(ItemStack stack, @Nullable Level level, List tooltip,
+TooltipFlag flag) {\n DisasterType selected = getSelectedDisaster(stack);\n
+tooltip.add(Component.literal(\u0022Selecionado (\u0022 + (selected.ordinal()
++ 1) + \u0022/\u0022 + DisasterType.values().length + \u0022): \u0022)\n
+.withStyle(ChatFormatting.GRAY)\n
+.append(Component.literal(selected.getDisplayName()).withStyle(selected.getTextColor(),
+ChatFormatting.BOLD)));\n
+tooltip.add(Component.literal(selected.getDescription()).withStyle(ChatFormatting.DARK_GRAY));\n
+tooltip.add(Component.empty());\n tooltip.add(Component.literal(\u0022Shift +
+Clique Direito: \u0022).withStyle(ChatFormatting.YELLOW)\n
+.append(Component.literal(\u0022Trocar
+desastre\u0022).withStyle(ChatFormatting.WHITE)));\n
+tooltip.add(Component.literal(\u0022Clique Direito:
+\u0022).withStyle(ChatFormatting.AQUA)\n .append(Component.literal(\u0022Ativar
+/ Trocar / Encerrar desastre\u0022).withStyle(ChatFormatting.WHITE)));\n }\n}\n"
+}, { "ordem": 13, "caminho":
+"src/main/java/com/cataclismo/cataclismomod/DisasterNetwork.java", "conteudo":
+"package com.cataclismo.cataclismomod;\n\nimport
+com.cataclismo.cataclismomod.client.ClientDisasterState;\nimport
+java.util.function.Supplier;\nimport
+net.minecraft.network.FriendlyByteBuf;\nimport
+net.minecraft.resources.ResourceLocation;\nimport
+net.minecraft.server.level.ServerLevel;\nimport
+net.minecraft.server.level.ServerPlayer;\nimport
+net.minecraftforge.api.distmarker.Dist;\nimport
+net.minecraftforge.fml.DistExecutor;\nimport
+net.minecraftforge.network.NetworkDirection;\nimport
+net.minecraftforge.network.NetworkEvent;\nimport
+net.minecraftforge.network.NetworkRegistry;\nimport
+net.minecraftforge.network.PacketDistributor;\nimport
+net.minecraftforge.network.simple.SimpleChannel;\n\npublic class DisasterNetwork
+{\n private static final String PROTOCOL_VERSION = \u00221\u0022;\n private
+static boolean registered = false;\n\n public static final SimpleChannel CHANNEL
+= NetworkRegistry.newSimpleChannel(\n new ResourceLocation(CataclismoMod.MOD_ID,
+\u0022main\u0022),\n () -> PROTOCOL_VERSION,\n PROTOCOL_VERSION::equals,\n
+PROTOCOL_VERSION::equals\n );\n\n public static void register() {\n if
+(registered) {\n return;\n }\n registered = true;\n
+CHANNEL.messageBuilder(DisasterSyncPacket.class, 0,
+NetworkDirection.PLAY_TO_CLIENT)\n .encoder(DisasterSyncPacket::encode)\n
+.decoder(DisasterSyncPacket::decode)\n
+.consumerMainThread(DisasterSyncPacket::handle)\n .add();\n }\n\n public static
+void sendToDimension(ServerLevel level, DisasterSyncPacket packet) {\n
+CHANNEL.send(PacketDistributor.DIMENSION.with(level::dimension), packet);\n
+}\n\n public static void sendToPlayer(ServerPlayer player, DisasterSyncPacket
+packet) {\n CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet);\n
+}\n\n public static class DisasterSyncPacket {\n public final int
+disasterOrdinal;\n public final int ticksElapsed;\n public final int
+totalDuration;\n public final double originX;\n public final double originY;\n
+public final double originZ;\n public final double movingX;\n public final
+double movingY;\n public final double movingZ;\n public final double dirX;\n
+public final double dirZ;\n public final int waveStep;\n public final float
+intensity;\n public final double[] meteorCoords;\n public final double[]
+boltCoords;\n\n public DisasterSyncPacket(\n int disasterOrdinal, int
+ticksElapsed, int totalDuration,\n double originX, double originY, double
+originZ,\n double movingX, double movingY, double movingZ,\n double dirX, double
+dirZ, int waveStep, float intensity,\n double[] meteorCoords, double[]
+boltCoords) {\n this.disasterOrdinal = disasterOrdinal;\n this.ticksElapsed =
+ticksElapsed;\n this.totalDuration = totalDuration;\n this.originX = originX;\n
+this.originY = originY;\n this.originZ = originZ;\n this.movingX = movingX;\n
+this.movingY = movingY;\n this.movingZ = movingZ;\n this.dirX = dirX;\n
+this.dirZ = dirZ;\n this.waveStep = waveStep;\n this.intensity = intensity;\n
+this.meteorCoords = meteorCoords;\n this.boltCoords = boltCoords;\n }\n\n public
+static DisasterSyncPacket inactive() {\n return new
+DisasterSyncPacket(-1, 0, 1, 0, 64, 0, 0, 64, 0, 1, 0, 0, 0.0F, new double[0],
+new double[0]);\n }\n\n public static void encode(DisasterSyncPacket msg,
+FriendlyByteBuf buf) {\n buf.writeInt(msg.disasterOrdinal);\n
+buf.writeInt(msg.ticksElapsed);\n buf.writeInt(msg.totalDuration);\n
+buf.writeDouble(msg.originX);\n buf.writeDouble(msg.originY);\n
+buf.writeDouble(msg.originZ);\n buf.writeDouble(msg.movingX);\n
+buf.writeDouble(msg.movingY);\n buf.writeDouble(msg.movingZ);\n
+buf.writeDouble(msg.dirX);\n buf.writeDouble(msg.dirZ);\n
+buf.writeInt(msg.waveStep);\n buf.writeFloat(msg.intensity);\n int mCount =
+Math.min(12, msg.meteorCoords.length / 3);\n buf.writeInt(mCount);\n for (int i
+= 0; i < mCount * 3; i++) {\n buf.writeDouble(msg.meteorCoords[i]);\n }\n int
+bCount = Math.min(6, msg.boltCoords.length / 3);\n buf.writeInt(bCount);\n for
+(int i = 0; i < bCount * 3; i++) {\n buf.writeDouble(msg.boltCoords[i]);\n }\n
+}\n\n public static DisasterSyncPacket decode(FriendlyByteBuf buf) {\n int ord =
+buf.readInt();\n int ticks = buf.readInt();\n int total = buf.readInt();\n
+double ox = buf.readDouble();\n double oy = buf.readDouble();\n double oz =
+buf.readDouble();\n double mx = buf.readDouble();\n double my =
+buf.readDouble();\n double mz = buf.readDouble();\n double dx =
+buf.readDouble();\n double dz = buf.readDouble();\n int wave = buf.readInt();\n
+float inten = buf.readFloat();\n int mCount = Math.max(0, Math.min(12,
+buf.readInt()));\n double[] meteors = new double[mCount * 3];\n for (int i = 0;
+i < mCount * 3; i++) {\n meteors[i] = buf.readDouble();\n }\n int bCount =
+Math.max(0, Math.min(6, buf.readInt()));\n double[] bolts = new double[bCount
+* 3];\n for (int i = 0; i < bCount * 3; i++) {\n bolts[i] = buf.readDouble();\n
+}\n return new DisasterSyncPacket(ord, ticks, total, ox, oy, oz, mx, my, mz, dx,
+dz, wave, inten, meteors, bolts);\n }\n\n public static void
+handle(DisasterSyncPacket msg, Supplier<NetworkEvent.Context> ctx) {\n
+DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
+ClientDisasterState.applySync(msg));\n ctx.get().setPacketHandled(true);\n }\n
+}\n}\n" }, { "ordem": 14, "caminho":
+"src/main/java/com/cataclismo/cataclismomod/DisasterManager.java", "conteudo":
+"package com.cataclismo.cataclismomod;\n\nimport java.util.ArrayList;\nimport
+java.util.HashMap;\nimport java.util.Iterator;\nimport java.util.List;\nimport
+java.util.Map;\nimport net.minecraft.ChatFormatting;\nimport
+net.minecraft.core.BlockPos;\nimport net.minecraft.core.Direction;\nimport
+net.minecraft.core.particles.BlockParticleOption;\nimport
+net.minecraft.core.particles.DustParticleOptions;\nimport
+net.minecraft.core.particles.ParticleTypes;\nimport
+net.minecraft.network.chat.Component;\nimport
+net.minecraft.resources.ResourceKey;\nimport
+net.minecraft.server.level.ServerBossEvent;\nimport
+net.minecraft.server.level.ServerLevel;\nimport
+net.minecraft.server.level.ServerPlayer;\nimport
+net.minecraft.sounds.SoundEvents;\nimport
+net.minecraft.sounds.SoundSource;\nimport net.minecraft.tags.BlockTags;\nimport
+net.minecraft.util.RandomSource;\nimport net.minecraft.world.BossEvent;\nimport
+net.minecraft.world.effect.MobEffectInstance;\nimport
+net.minecraft.world.effect.MobEffects;\nimport
+net.minecraft.world.entity.Entity;\nimport
+net.minecraft.world.entity.EntityType;\nimport
+net.minecraft.world.entity.EquipmentSlot;\nimport
+net.minecraft.world.entity.LightningBolt;\nimport
+net.minecraft.world.entity.LivingEntity;\nimport
+net.minecraft.world.entity.item.FallingBlockEntity;\nimport
+net.minecraft.world.entity.player.Player;\nimport
+net.minecraft.world.item.ArmorItem;\nimport
+net.minecraft.world.item.ArmorMaterials;\nimport
+net.minecraft.world.item.ItemStack;\nimport
+net.minecraft.world.level.Level;\nimport
+net.minecraft.world.level.block.AbstractGlassBlock;\nimport
+net.minecraft.world.level.block.Blocks;\nimport
+net.minecraft.world.level.block.SnowLayerBlock;\nimport
+net.minecraft.world.level.block.StainedGlassPaneBlock;\nimport
+net.minecraft.world.level.block.state.BlockState;\nimport
+net.minecraft.world.level.levelgen.Heightmap;\nimport
+net.minecraft.world.phys.AABB;\nimport net.minecraft.world.phys.Vec3;\nimport
+net.minecraftforge.event.TickEvent;\nimport
+net.minecraftforge.event.entity.player.PlayerEvent;\nimport
+net.minecraftforge.event.server.ServerStoppingEvent;\nimport
+net.minecraftforge.eventbus.api.SubscribeEvent;\nimport
+org.joml.Vector3f;\n\npublic class DisasterManager {\n private static final
+Map<ResourceKey, ActiveDisaster> ACTIVE_DISASTERS = new HashMap<>();\n\n private
+static final DustParticleOptions ACID_DUST = new DustParticleOptions(new
+Vector3f(0.32F, 0.95F, 0.20F), 1.5F);\n private static final DustParticleOptions
+SAND_DUST = new DustParticleOptions(new Vector3f(0.86F, 0.72F, 0.44F), 2.3F);\n
+private static final DustParticleOptions HEAT_DUST = new DustParticleOptions(new
+Vector3f(1.00F, 0.45F, 0.08F), 1.4F);\n private static final DustParticleOptions
+SOLAR_GOLD = new DustParticleOptions(new
+Vector3f(1.00F, 0.85F, 0.25F), 1.8F);\n\n public static boolean
+isActive(ServerLevel level) {\n return
+ACTIVE_DISASTERS.containsKey(level.dimension());\n }\n\n public static
+DisasterType getActiveType(ServerLevel level) {\n ActiveDisaster active =
+ACTIVE_DISASTERS.get(level.dimension());\n return active != null ? active.type :
+null;\n }\n\n public static void startDisaster(ServerLevel level, DisasterType
+type, BlockPos playerPos, Vec3 lookAngle) {\n if
+(ACTIVE_DISASTERS.containsKey(level.dimension())) {\n stopDisaster(level,
+false);\n }\n\n double lx = lookAngle.x;\n double lz = lookAngle.z;\n double len
+= Math.sqrt(lx * lx + lz * lz);\n if (len < 0.001) {\n lx = 1.0;\n lz = 0.0;\n }
+else {\n lx /= len;\n lz /= len;\n }\n\n BlockPos origin = playerPos;\n if (type
+== DisasterType.TORNADO) {\n origin = playerPos.offset((int) Math.round(lx
+* 32.0), 0, (int) Math.round(lz * 32.0));\n } else if (type ==
+DisasterType.TSUNAMI) {\n origin = playerPos.offset((int) Math.round(lx
+* 28.0), 0, (int) Math.round(lz * 28.0));\n } else if (type ==
+DisasterType.VOLCANIC_ERUPTION) {\n origin = playerPos.offset((int)
+Math.round(lx * 24.0), 0, (int) Math.round(lz * 24.0));\n } else if (type ==
+DisasterType.SINKHOLE) {\n origin = playerPos.offset((int) Math.round(lx
+* 14.0), 0, (int) Math.round(lz * 14.0));\n }\n\n int originSurfY =
+level.isLoaded(origin)\n ?
+level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(),
+origin.getZ())\n : playerPos.getY();\n origin = new BlockPos(origin.getX(),
+originSurfY, origin.getZ());\n\n ServerBossEvent bossBar = new
+ServerBossEvent(\n
+Component.literal(type.getDisplayName()).withStyle(type.getTextColor(),
+ChatFormatting.BOLD),\n type.getBossBarColor(),\n
+BossEvent.BossBarOverlay.NOTCHED_10\n );\n
+bossBar.setDarkenScreen(type.shouldDarkenScreen());\n for (ServerPlayer player :
+level.players()) {\n bossBar.addPlayer(player);\n }\n\n double moveDirX = (type
+== DisasterType.TSUNAMI) ? -lx : lx;\n double moveDirZ = (type ==
+DisasterType.TSUNAMI) ? -lz : lz;\n ActiveDisaster active = new
+ActiveDisaster(type, bossBar, type.getDurationTicks(), origin, moveDirX,
+moveDirZ);\n ACTIVE_DISASTERS.put(level.dimension(), active);\n\n
+applyInitialWeather(level, type);\n DisasterNetwork.sendToDimension(level,
+buildSyncPacket(active));\n\n Component alert = Component.literal(\u0022[ALERTA
+DE CATACLISMO] \u0022).withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD)\n
+.append(Component.literal(type.getDisplayName()).withStyle(type.getTextColor(),
+ChatFormatting.BOLD))\n .append(Component.literal(\u0022 iniciou!
+\u0022).withStyle(ChatFormatting.RED))\n
+.append(Component.literal(type.getDescription()).withStyle(ChatFormatting.GRAY));\n
+for (ServerPlayer player : level.players()) {\n
+player.sendSystemMessage(alert);\n }\n }\n\n public static void
+stopDisaster(ServerLevel level, boolean announce) {\n ActiveDisaster removed =
+ACTIVE_DISASTERS.remove(level.dimension());\n if (removed != null) {\n
+drainAllTemporaryWater(level, removed);\n removed.bossBar.removeAllPlayers();\n
+level.setWeatherParameters(6000, 0, false, false);\n
+DisasterNetwork.sendToDimension(level,
+DisasterNetwork.DisasterSyncPacket.inactive());\n if (announce) {\n Component
+msg = Component.literal(\u0022[CATACLISMO]
+\u0022).withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD)\n
+.append(Component.literal(removed.type.getDisplayName() + \u0022 encerrado. O
+clima voltou ao normal.\u0022).withStyle(ChatFormatting.WHITE));\n for
+(ServerPlayer player : level.players()) {\n player.sendSystemMessage(msg);\n }\n
+}\n }\n }\n\n private static DisasterNetwork.DisasterSyncPacket
+buildSyncPacket(ActiveDisaster active) {\n int mCount = Math.min(12,
+active.meteors.size());\n double[] mCoords = new double[mCount * 3];\n for (int
+i = 0; i < mCount; i++) {\n MeteorProjectile m = active.meteors.get(i);\n
+mCoords[i * 3] = m.x;\n mCoords[i * 3 + 1] = m.y;\n mCoords[i * 3 + 2] = m.z;\n
+}\n int bCount = Math.min(6, active.recentBolts.size());\n double[] bCoords =
+new double[bCount * 3];\n for (int i = 0; i < bCount; i++) {\n BoltFlash b =
+active.recentBolts.get(i);\n bCoords[i * 3] = b.x;\n bCoords[i * 3 + 1] = b.y;\n
+bCoords[i * 3 + 2] = b.z;\n }\n return new DisasterNetwork.DisasterSyncPacket(\n
+active.type.ordinal(),\n active.ticksElapsed,\n active.totalDuration,\n
+active.origin.getX() + 0.5,\n active.origin.getY(),\n active.origin.getZ()
++ 0.5,\n active.movingX,\n active.movingY,\n active.movingZ,\n active.dirX,\n
+active.dirZ,\n active.waveStep,\n active.lastIntensity,\n mCoords,\n bCoords\n
+);\n }\n\n private static void applyInitialWeather(ServerLevel level,
+DisasterType type) {\n int dur = type.getDurationTicks() + 100;\n switch (type)
+{\n case TORNADO, SUPERCELL_STORM, HURRICANE -> level.setWeatherParameters(0,
+dur, true, true);\n case ACID_RAIN, BLIZZARD, HAILSTORM, LANDSLIDE, TSUNAMI ->
+level.setWeatherParameters(0, dur, true, false);\n case HEATWAVE, SOLAR_FLARE,
+SANDSTORM, WILDFIRE -> level.setWeatherParameters(dur, 0, false, false);\n
+default -> {\n }\n }\n }\n\n @SubscribeEvent\n public static void
+onLevelTick(TickEvent.LevelTickEvent event) {\n if (event.phase !=
+TickEvent.Phase.END) {\n return;\n }\n if (event.level.isClientSide() ||
+!(event.level instanceof ServerLevel level)) {\n return;\n }\n\n ActiveDisaster
+active = ACTIVE_DISASTERS.get(level.dimension());\n if (active == null) {\n
+return;\n }\n\n if (level.players().isEmpty()) {\n return;\n }\n\n
+active.ticksElapsed++;\n int remaining = active.totalDuration -
+active.ticksElapsed;\n if (remaining <= 0) {\n stopDisaster(level, true);\n
+return;\n }\n\n Iterator bit = active.recentBolts.iterator();\n while
+(bit.hasNext()) {\n BoltFlash bf = bit.next();\n bf.life--;\n if (bf.life <= 0)
+{\n bit.remove();\n }\n }\n\n if (active.ticksElapsed % 10 == 0) {\n float
+progress = Math.max(0.0F, Math.min(1.0F, remaining / (float)
+active.totalDuration));\n active.bossBar.setProgress(progress);\n int sec =
+Math.max(1, remaining / 20);\n active.bossBar.setName(\n
+Component.literal(active.type.getDisplayName() + \u0022 - \u0022 + sec +
+\u0022s\u0022)\n .withStyle(active.type.getTextColor(), ChatFormatting.BOLD)\n
+);\n }\n\n active.lastIntensity = 1.0F;\n switch (active.type) {\n case
+EARTHQUAKE -> tickEarthquake(level, active);\n case TORNADO ->
+tickTornado(level, active);\n case TSUNAMI -> tickTsunami(level, active);\n case
+VOLCANIC_ERUPTION -> tickVolcanicEruption(level, active);\n case METEOR_SHOWER
+-> tickMeteorShower(level, active);\n case ACID_RAIN -> tickAcidRain(level,
+active);\n case BLIZZARD -> tickBlizzard(level, active);\n case HEATWAVE ->
+tickHeatwave(level, active);\n case SANDSTORM -> tickSandstorm(level, active);\n
+case SUPERCELL_STORM -> tickSupercellStorm(level, active);\n case HAILSTORM ->
+tickHailstorm(level, active);\n case HURRICANE -> tickHurricane(level,
+active);\n case LANDSLIDE -> tickLandslide(level, active);\n case SINKHOLE ->
+tickSinkhole(level, active);\n case WILDFIRE -> tickWildfire(level, active);\n
+case SOLAR_FLARE -> tickSolarFlare(level, active);\n }\n\n if
+(active.ticksElapsed % 2 == 0) {\n DisasterNetwork.sendToDimension(level,
+buildSyncPacket(active));\n }\n }\n\n @SubscribeEvent\n public static void
+onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {\n if
+(event.getEntity() instanceof ServerPlayer player && player.level() instanceof
+ServerLevel serverLevel) {\n ActiveDisaster active =
+ACTIVE_DISASTERS.get(serverLevel.dimension());\n if (active != null) {\n
+active.bossBar.addPlayer(player);\n DisasterNetwork.sendToPlayer(player,
+buildSyncPacket(active));\n } else {\n DisasterNetwork.sendToPlayer(player,
+DisasterNetwork.DisasterSyncPacket.inactive());\n }\n }\n }\n\n
+@SubscribeEvent\n public static void
+onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {\n if
+(event.getEntity() instanceof ServerPlayer player) {\n ActiveDisaster oldActive
+= ACTIVE_DISASTERS.get(event.getFrom());\n if (oldActive != null) {\n
+oldActive.bossBar.removePlayer(player);\n }\n ActiveDisaster newActive =
+ACTIVE_DISASTERS.get(event.getTo());\n if (newActive != null) {\n
+newActive.bossBar.addPlayer(player);\n DisasterNetwork.sendToPlayer(player,
+buildSyncPacket(newActive));\n } else {\n DisasterNetwork.sendToPlayer(player,
+DisasterNetwork.DisasterSyncPacket.inactive());\n }\n }\n }\n\n
+@SubscribeEvent\n public static void
+onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {\n if
+(event.getEntity() instanceof ServerPlayer player) {\n for (ActiveDisaster
+active : ACTIVE_DISASTERS.values()) {\n active.bossBar.removePlayer(player);\n
+}\n }\n }\n\n @SubscribeEvent\n public static void
+onServerStopping(ServerStoppingEvent event) {\n for (ActiveDisaster active :
+ACTIVE_DISASTERS.values()) {\n active.bossBar.removeAllPlayers();\n }\n
+ACTIVE_DISASTERS.clear();\n }\n\n private static void tickEarthquake(ServerLevel
+level, ActiveDisaster active) {\n RandomSource rng = level.random;\n float
+progress = active.ticksElapsed / (float) active.totalDuration;\n float
+intensity;\n if (progress < 0.15F) {\n intensity = progress / 0.15F;\n } else if
+(progress < 0.78F) {\n intensity = 1.0F;\n } else {\n intensity = 0.4F + 0.5F *
+(float) Math.abs(Math.sin(active.ticksElapsed * 0.25));\n }\n
+active.lastIntensity = intensity;\n\n for (ServerPlayer player :
+level.players()) {\n BlockPos pPos = player.blockPosition();\n if
+(active.ticksElapsed % 2 == 0) {\n AABB area = new
+AABB(pPos).inflate(36.0, 20.0, 36.0);\n for (LivingEntity entity :
+level.getEntitiesOfClass(LivingEntity.class, area)) {\n if (entity.onGround() &&
+isVulnerableLiving(entity)) {\n double sx = (rng.nextDouble() - 0.5) * 0.34 *
+intensity;\n double sz = (rng.nextDouble() - 0.5) * 0.34 * intensity;\n double
+sy = rng.nextDouble() < 0.35 ? 0.12 * intensity : 0.0;\n
+entity.setDeltaMovement(entity.getDeltaMovement().add(sx, sy, sz));\n
+entity.hurtMarked = true;\n if (intensity > 0.85F && active.ticksElapsed % 30
+== 0) {\n entity.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 70, 0,
+false, false));\n }\n }\n }\n }\n\n if (active.ticksElapsed % 4 == 0) {\n for
+(int i = 0; i < 6; i++) {\n int rx = pPos.getX() + rng.nextInt(33) - 16;\n int
+rz = pPos.getZ() + rng.nextInt(33) - 16;\n BlockPos surf =
+getSurfaceBlockPos(level, rx, rz);\n if (surf != null) {\n BlockState state =
+level.getBlockState(surf);\n if (state.blocksMotion()) {\n
+level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state),\n
+surf.getX() + 0.5, surf.getY() + 1.1, surf.getZ()
++ 0.5, 3, 0.4, 0.2, 0.4, 0.15);\n }\n }\n }\n }\n\n if (active.ticksElapsed % 22
+== 0) {\n level.playSound((Player) null, pPos.getX(), pPos.getY(),
+pPos.getZ(),\n SoundEvents.WARDEN_ROAR, SoundSource.WEATHER, 0.65F *
+intensity, 0.55F);\n }\n\n if (intensity > 0.65F && active.ticksElapsed % 4
+== 0) {\n for (int i = 0; i < 5; i++) {\n BlockPos check =
+pPos.offset(rng.nextInt(33) - 16, rng.nextInt(15) - 4, rng.nextInt(33) - 16);\n
+if (!level.isLoaded(check)) {\n continue;\n }\n BlockState state =
+level.getBlockState(check);\n if (isFragileGlassOrDecor(state)) {\n
+level.destroyBlock(check, false);\n level.playSound((Player) null, check.getX(),
+check.getY(), check.getZ(),\n SoundEvents.GLASS_BREAK,
+SoundSource.BLOCKS, 0.6F, 1.0F);\n } else if (isBreakableByDisaster(level,
+check, state, 3.0F)\n && level.getBlockState(check.below()).isAir()\n &&
+rng.nextFloat() < 0.45F) {\n FallingBlockEntity falling =
+FallingBlockEntity.fall(level, check, state);\n
+falling.setHurtsEntities(2.5F, 14);\n }\n }\n }\n }\n\n if (intensity > 0.7F &&
+active.ticksElapsed % 7 == 0) {\n int step = active.ticksElapsed / 7;\n double
+dist = (step % 28) - 14.0;\n int fx = (int) Math.round(active.origin.getX() +
+active.dirX * dist + (rng.nextDouble() - 0.5) * 3.0);\n int fz = (int)
+Math.round(active.origin.getZ() + active.dirZ * dist + (rng.nextDouble() - 0.5)
+* 3.0);\n BlockPos surf = getSurfaceBlockPos(level, fx, fz);\n if (surf != null)
+{\n int depth = 3 + rng.nextInt(5);\n for (int d = 0; d < depth; d++) {\n
+BlockPos crackPos = surf.below(d);\n if (crackPos.getY() <=
+level.getMinBuildHeight() + 4) {\n break;\n }\n BlockState st =
+level.getBlockState(crackPos);\n if (isBreakableByDisaster(level, crackPos,
+st, 4.0F)) {\n level.destroyBlock(crackPos, false);\n }\n }\n
+level.playSound((Player) null, surf.getX(), surf.getY(), surf.getZ(),\n
+SoundEvents.STONE_BREAK, SoundSource.BLOCKS, 1.2F, 0.6F);\n }\n }\n }\n\n
+private static void tickTornado(ServerLevel level, ActiveDisaster active) {\n
+RandomSource rng = level.random;\n double turn = Math.sin(active.ticksElapsed
+* 0.032) * 0.022;\n double cos = Math.cos(turn);\n double sin =
+Math.sin(turn);\n double ndx = active.dirX * cos - active.dirZ * sin;\n double
+ndz = active.dirX * sin + active.dirZ * cos;\n active.dirX = ndx;\n active.dirZ
+= ndz;\n\n active.movingX += active.dirX * 0.16;\n active.movingZ += active.dirZ
+* 0.16;\n\n int fx = (int) Math.floor(active.movingX);\n int fz = (int)
+Math.floor(active.movingZ);\n BlockPos probe = new BlockPos(fx,
+active.origin.getY(), fz);\n if (!level.isLoaded(probe)) {\n return;\n }\n int
+groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, fx, fz);\n
+active.movingY = groundY;\n\n AABB vortexBox = new AABB(\n active.movingX
+- 24.0, groundY - 4.0, active.movingZ - 24.0,\n active.movingX + 24.0, groundY
++ 55.0, active.movingZ + 24.0\n );\n for (Entity entity :
+level.getEntitiesOfClass(Entity.class, vortexBox)) {\n if (entity instanceof
+Player p && (p.isCreative() || p.isSpectator())) {\n continue;\n }\n double dx =
+active.movingX - entity.getX();\n double dz = active.movingZ - entity.getZ();\n
+double dist = Math.sqrt(dx * dx + dz * dz);\n if (dist < 24.0 && dist > 0.1) {\n
+double strength = (1.0 - dist / 24.0);\n double nx = dx / dist;\n double nz = dz
+/ dist;\n double tx = -nz;\n double tz = nx;\n double relY = entity.getY() -
+groundY;\n double pull = relY > 30.0 ? -0.38 : 0.25 * strength;\n double swirl
+= 0.36 * strength;\n double lift = (dist < 10.0 && relY < 32.0) ? 0.24 *
+strength : 0.02;\n Vec3 vel = entity.getDeltaMovement().scale(0.65).add(nx *
+pull + tx * swirl, lift, nz * pull + tz * swirl);\n
+entity.setDeltaMovement(vel);\n entity.hurtMarked = true;\n }\n }\n\n if
+(active.ticksElapsed % 2 == 0) {\n for (int i = 0; i < 6; i++) {\n int ox = fx +
+rng.nextInt(15) - 7;\n int oz = fz + rng.nextInt(15) - 7;\n BlockPos surf =
+getSurfaceBlockPos(level, ox, oz);\n if (surf == null) {\n continue;\n }\n
+BlockState st = level.getBlockState(surf);\n if (isBreakableByDisaster(level,
+surf, st, 3.5F)) {\n FallingBlockEntity debris = FallingBlockEntity.fall(level,
+surf, st);\n if (rng.nextFloat() < 0.65F) {\n debris.disableDrop();\n }\n
+debris.setHurtsEntities(2.0F, 10);\n debris.setDeltaMovement(\n
+(rng.nextDouble() - 0.5) * 1.0,\n 0.8 + rng.nextDouble() * 0.9,\n
+(rng.nextDouble() - 0.5) * 1.0\n );\n }\n }\n }\n\n if (active.ticksElapsed % 28
+== 0) {\n double bAngle = rng.nextDouble() * Math.PI * 2.0;\n double bDist
+= 14.0 + rng.nextDouble() * 24.0;\n int bx = (int) Math.round(active.movingX +
+Math.cos(bAngle) * bDist);\n int bz = (int) Math.round(active.movingZ +
+Math.sin(bAngle) * bDist);\n BlockPos bSurf = getSurfaceBlockPos(level, bx,
+bz);\n if (bSurf != null) {\n active.recentBolts.add(new BoltFlash(bx + 0.5,
+bSurf.getY(), bz + 0.5, 8));\n level.playSound((Player) null, bx, bSurf.getY()
++ 10.0, bz,\n SoundEvents.LIGHTNING_BOLT_THUNDER,
+SoundSource.WEATHER, 1.8F, 0.75F + rng.nextFloat() * 0.25F);\n if
+(rng.nextFloat() < 0.35F) {\n LightningBolt bolt =
+EntityType.LIGHTNING_BOLT.create(level);\n if (bolt != null) {\n
+bolt.moveTo(Vec3.atBottomCenterOf(bSurf.above()));\n
+level.addFreshEntity(bolt);\n }\n }\n }\n }\n\n if (active.ticksElapsed % 16
+== 0) {\n level.playSound((Player) null, active.movingX, groundY + 8.0,
+active.movingZ,\n SoundEvents.ENDER_DRAGON_GROWL,
+SoundSource.WEATHER, 1.5F, 0.52F);\n }\n }\n\n private static void
+tickTsunami(ServerLevel level, ActiveDisaster active) {\n if
+(active.ticksElapsed < 60) {\n active.movingX = active.origin.getX() + 0.5;\n
+active.movingZ = active.origin.getZ() + 0.5;\n active.movingY =
+active.origin.getY();\n if (active.ticksElapsed % 15 == 0) {\n
+level.playSound((Player) null, active.origin.getX(), active.origin.getY(),
+active.origin.getZ(),\n SoundEvents.WARDEN_ROAR,
+SoundSource.WEATHER, 1.5F, 0.5F);\n }\n return;\n }\n\n double baseX =
+active.origin.getX() + active.dirX * active.waveStep;\n double baseZ =
+active.origin.getZ() + active.dirZ * active.waveStep;\n active.movingX =
+baseX;\n active.movingZ = baseZ;\n BlockPos centerProbe = new BlockPos((int)
+baseX, active.origin.getY(), (int) baseZ);\n if (level.isLoaded(centerProbe))
+{\n active.movingY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+(int) baseX, (int) baseZ);\n }\n\n if (active.ticksElapsed % 4 == 0 &&
+active.waveStep < 62) {\n double perpX = -active.dirZ;\n double perpZ =
+active.dirX;\n\n for (int w = -15; w <= 15; w++) {\n int wx = (int)
+Math.round(baseX + perpX * w);\n int wz = (int) Math.round(baseZ + perpZ * w);\n
+BlockPos probe = new BlockPos(wx, active.origin.getY(), wz);\n if
+(!level.isLoaded(probe)) {\n continue;\n }\n int surfY =
+level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, wx, wz);\n int
+crestHeight = 8 - (Math.abs(w) / 5);\n for (int h = 0; h < crestHeight; h++) {\n
+BlockPos waterPos = new BlockPos(wx, surfY + h, wz);\n if (waterPos.getY() >=
+level.getMaxBuildHeight() - 2) {\n break;\n }\n BlockState current =
+level.getBlockState(waterPos);\n if (current.isAir() || current.canBeReplaced()
+|| isFragileGlassOrDecor(current)\n || current.is(BlockTags.FENCES) ||
+current.is(BlockTags.DOORS)) {\n level.setBlock(waterPos,
+Blocks.WATER.defaultBlockState(), 3);\n if (h >= 2 &&
+active.temporaryWater.size() < 2400) {\n
+active.temporaryWater.add(waterPos.immutable());\n }\n }\n }\n }\n\n AABB
+waveBox = new AABB(baseX - 18.0, active.origin.getY() - 12.0, baseZ - 18.0,\n
+baseX + 18.0, active.origin.getY() + 24.0, baseZ + 18.0);\n for (Entity entity :
+level.getEntitiesOfClass(Entity.class, waveBox)) {\n if (entity instanceof
+Player p && (p.isCreative() || p.isSpectator())) {\n continue;\n }\n
+entity.setDeltaMovement(active.dirX * 1.15, 0.35, active.dirZ * 1.15);\n
+entity.hurtMarked = true;\n if (entity instanceof LivingEntity living &&
+isVulnerableLiving(living)) {\n
+living.hurt(level.damageSources().drown(), 2.0F);\n }\n }\n\n
+level.playSound((Player) null, baseX, active.origin.getY() + 4.0, baseZ,\n
+SoundEvents.PLAYER_SPLASH_HIGH_SPEED, SoundSource.WEATHER, 1.5F, 0.65F);\n
+active.waveStep++;\n }\n\n if (active.ticksElapsed % 2 == 0 &&
+active.temporaryWater.size() > 380) {\n drainBatchTemporaryWater(level,
+active, 45);\n }\n }\n\n private static void tickVolcanicEruption(ServerLevel
+level, ActiveDisaster active) {\n RandomSource rng = level.random;\n int vx =
+active.origin.getX();\n int vz = active.origin.getZ();\n if
+(!level.isLoaded(active.origin)) {\n return;\n }\n int baseSurfY =
+level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, vx, vz);\n
+active.movingX = vx + 0.5;\n active.movingY = baseSurfY;\n active.movingZ = vz
++ 0.5;\n\n if (!active.initialized) {\n active.initialized = true;\n for (int dx
+= -6; dx <= 6; dx++) {\n for (int dz = -6; dz <= 6; dz++) {\n double d =
+Math.sqrt(dx * dx + dz * dz);\n if (d > 6.5) {\n continue;\n }\n int coneH =
+(int) Math.round((6.5 - d) * 1.25);\n for (int h = 0; h <= coneH; h++) {\n
+BlockPos pos = new BlockPos(vx + dx, baseSurfY + h - 1, vz + dz);\n if
+(!level.isLoaded(pos)) {\n continue;\n }\n if (d < 1.8 && h >= coneH - 2) {\n
+level.setBlock(pos, Blocks.LAVA.defaultBlockState(), 3);\n } else {\n BlockState
+rock = rng.nextFloat() < 0.2F ? Blocks.MAGMA_BLOCK.defaultBlockState()\n :
+(rng.nextBoolean() ? Blocks.BASALT.defaultBlockState() :
+Blocks.BLACKSTONE.defaultBlockState());\n level.setBlock(pos, rock, 3);\n }\n
+}\n }\n }\n level.playSound((Player) null, vx, baseSurfY + 7, vz,
+SoundEvents.GENERIC_EXPLODE, SoundSource.WEATHER, 2.0F, 0.5F);\n }\n\n int ventY
+= Math.min(level.getMaxBuildHeight() - 5, baseSurfY + 7);\n if
+(active.ticksElapsed % 14 == 0) {\n for (int i = 0; i < 3; i++) {\n BlockPos
+launchPos = new BlockPos(vx, ventY + 2, vz);\n if
+(level.getBlockState(launchPos).isAir()) {\n BlockState bombState =
+rng.nextFloat() < 0.7F ? Blocks.MAGMA_BLOCK.defaultBlockState() :
+Blocks.BASALT.defaultBlockState();\n FallingBlockEntity bomb =
+FallingBlockEntity.fall(level, launchPos, bombState);\n
+bomb.setHurtsEntities(4.0F, 20);\n double angle = rng.nextDouble() * Math.PI
+* 2.0;\n double speed = 0.45 + rng.nextDouble() * 0.75;\n
+bomb.setDeltaMovement(Math.cos(angle) * speed, 1.0 + rng.nextDouble() * 0.6,
+Math.sin(angle) * speed);\n }\n }\n level.playSound((Player) null, vx, ventY,
+vz, SoundEvents.BLAZE_SHOOT, SoundSource.WEATHER, 1.5F, 0.55F);\n }\n\n if
+(active.ticksElapsed % 35 == 0) {\n double angle = rng.nextDouble() * Math.PI
+* 2.0;\n double dist = 8.0 + rng.nextDouble() * 24.0;\n int ix = (int)
+Math.round(vx + Math.cos(angle) * dist);\n int iz = (int) Math.round(vz +
+Math.sin(angle) * dist);\n BlockPos surf = getSurfaceBlockPos(level, ix, iz);\n
+if (surf != null) {\n level.explode(null, surf.getX() + 0.5, surf.getY() + 1.0,
+surf.getZ() + 0.5, 2.0F, true, Level.ExplosionInteraction.TNT);\n if
+(rng.nextFloat() < 0.45F) {\n level.setBlock(surf,
+Blocks.LAVA.defaultBlockState(), 3);\n }\n }\n }\n\n for (ServerPlayer player :
+level.players()) {\n BlockPos pPos = player.blockPosition();\n if
+(active.ticksElapsed % 2 == 0) {\n level.sendParticles(ParticleTypes.ASH,
+pPos.getX(), pPos.getY() + 7.0, pPos.getZ(), 18, 14.0, 5.0, 14.0, 0.02);\n }\n
+if (active.ticksElapsed % 40 == 0 && isVulnerableLiving(player) &&
+level.canSeeSky(pPos.above())) {\n player.addEffect(new
+MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 0, false, false));\n
+player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 35, 0, false,
+false));\n }\n }\n }\n\n private static void tickMeteorShower(ServerLevel level,
+ActiveDisaster active) {\n RandomSource rng = level.random;\n if
+(active.ticksElapsed % 16 == 0) {\n ServerPlayer targetPlayer =
+level.players().get(rng.nextInt(level.players().size()));\n double angle =
+rng.nextDouble() * Math.PI * 2.0;\n double dist = 8.0 + rng.nextDouble()
+* 28.0;\n double impactX = targetPlayer.getX() + Math.cos(angle) * dist;\n
+double impactZ = targetPlayer.getZ() + Math.sin(angle) * dist;\n int surfY =
+level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, (int) impactX, (int)
+impactZ);\n double spawnY = Math.min(level.getMaxBuildHeight() - 8, surfY
++ 62.0);\n double startX = impactX - active.dirX * 38.0 + (rng.nextDouble()
+- 0.5) * 10.0;\n double startZ = impactZ - active.dirZ * 38.0 +
+(rng.nextDouble() - 0.5) * 10.0;\n double steps = 36.0;\n double vx = (impactX -
+startX) / steps;\n double vy = (surfY - spawnY) / steps;\n double vz = (impactZ
+- startZ) / steps;\n float power = 2.6F + rng.nextFloat() * 2.2F;\n
+active.meteors.add(new MeteorProjectile(startX, spawnY, startZ, vx, vy, vz,
+power));\n }\n\n Iterator it = active.meteors.iterator();\n while (it.hasNext())
+{\n MeteorProjectile m = it.next();\n m.x += m.vx;\n m.y += m.vy;\n m.z +=
+m.vz;\n m.age++;\n\n BlockPos pos = BlockPos.containing(m.x, m.y, m.z);\n if
+(!level.isLoaded(pos) || m.age > 90 || pos.getY() <= level.getMinBuildHeight()
++ 2) {\n it.remove();\n continue;\n }\n if
+(level.getBlockState(pos).blocksMotion()) {\n level.explode(null, m.x, m.y, m.z,
+m.power, true, Level.ExplosionInteraction.TNT);\n
+level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, m.x, m.y + 1.0,
+m.z, 1, 0, 0, 0, 0);\n for (int dx = -1; dx <= 1; dx++) {\n for (int dz = -1; dz
+<= 1; dz++) {\n BlockPos core = pos.offset(dx, -1, dz);\n if
+(level.isLoaded(core) && core.getY() > level.getMinBuildHeight() + 2) {\n
+BlockState ore;\n float roll = rng.nextFloat();\n if (roll < 0.12F) {\n ore =
+Blocks.RAW_IRON_BLOCK.defaultBlockState();\n } else if (roll < 0.18F) {\n ore =
+Blocks.RAW_GOLD_BLOCK.defaultBlockState();\n } else if (roll < 0.45F) {\n ore =
+Blocks.MAGMA_BLOCK.defaultBlockState();\n } else if (roll < 0.65F) {\n ore =
+Blocks.CRYING_OBSIDIAN.defaultBlockState();\n } else {\n ore =
+Blocks.COBBLED_DEEPSLATE.defaultBlockState();\n }\n level.setBlock(core,
+ore, 3);\n }\n }\n }\n it.remove();\n }\n }\n }\n\n private static void
+tickAcidRain(ServerLevel level, ActiveDisaster active) {\n RandomSource rng =
+level.random;\n for (ServerPlayer player : level.players()) {\n BlockPos pPos =
+player.blockPosition();\n if (active.ticksElapsed % 2 == 0) {\n
+level.sendParticles(ACID_DUST, pPos.getX(), pPos.getY() + 7.0,
+pPos.getZ(), 14, 12.0, 4.0, 12.0, 0.05);\n }\n\n if (active.ticksElapsed % 20
+== 0) {\n AABB area = new AABB(pPos).inflate(30.0, 18.0, 30.0);\n for
+(LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {\n
+if (isVulnerableLiving(entity) &&
+level.canSeeSky(entity.blockPosition().above())) {\n
+entity.hurt(level.damageSources().magic(), 1.5F);\n entity.addEffect(new
+MobEffectInstance(MobEffects.POISON, 60, 0, false, false));\n
+level.playSound((Player) null, entity.getX(), entity.getY(), entity.getZ(),\n
+SoundEvents.FIRE_EXTINGUISH, SoundSource.WEATHER, 0.35F, 1.6F);\n if
+(rng.nextFloat() < 0.35F) {\n EquipmentSlot[] armorSlots = {EquipmentSlot.HEAD,
+EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};\n EquipmentSlot
+chosen = armorSlots[rng.nextInt(armorSlots.length)];\n ItemStack armor =
+entity.getItemBySlot(chosen);\n if (!armor.isEmpty() &&
+armor.isDamageableItem()) {\n armor.hurtAndBreak(1, entity, e ->
+e.broadcastBreakEvent(chosen));\n }\n }\n }\n }\n }\n\n if (active.ticksElapsed
+% 3 == 0) {\n for (int i = 0; i < 6; i++) {\n int rx = pPos.getX() +
+rng.nextInt(33) - 16;\n int rz = pPos.getZ() + rng.nextInt(33) - 16;\n BlockPos
+surf = getTopSurfaceIncludingLeaves(level, rx, rz);\n if (surf == null ||
+!level.canSeeSky(surf.above())) {\n continue;\n }\n BlockState st =
+level.getBlockState(surf);\n if (st.is(BlockTags.LEAVES) ||
+st.is(BlockTags.CROPS) || st.is(BlockTags.FLOWERS)\n || st.is(Blocks.GRASS) ||
+st.is(Blocks.TALL_GRASS)) {\n level.destroyBlock(surf, false);\n } else if
+(st.is(Blocks.GRASS_BLOCK)) {\n level.setBlock(surf,
+Blocks.COARSE_DIRT.defaultBlockState(), 3);\n } else if
+(st.is(Blocks.COPPER_BLOCK) || st.is(Blocks.EXPOSED_COPPER) ||
+st.is(Blocks.WEATHERED_COPPER)) {\n level.setBlock(surf,
+Blocks.OXIDIZED_COPPER.defaultBlockState(), 3);\n } else if (st.is(Blocks.STONE)
+&& rng.nextFloat() < 0.25F) {\n level.setBlock(surf,
+Blocks.COBBLESTONE.defaultBlockState(), 3);\n }\n }\n }\n }\n }\n\n private
+static void tickBlizzard(ServerLevel level, ActiveDisaster active) {\n
+RandomSource rng = level.random;\n for (ServerPlayer player : level.players())
+{\n BlockPos pPos = player.blockPosition();\n
+level.sendParticles(ParticleTypes.SNOWFLAKE, pPos.getX(), pPos.getY() + 5.0,
+pPos.getZ(), 24, 13.0, 5.0, 13.0, 0.12);\n\n if (active.ticksElapsed % 10 == 0)
+{\n AABB area = new AABB(pPos).inflate(30.0, 16.0, 30.0);\n for (LivingEntity
+entity : level.getEntitiesOfClass(LivingEntity.class, area)) {\n if
+(!isVulnerableLiving(entity)) {\n continue;\n }\n BlockPos ePos =
+entity.blockPosition();\n if (level.canSeeSky(ePos.above()) &&
+!isNearHeatSource(level, ePos)) {\n int frozen =
+Math.min(entity.getTicksFrozen() + 30, entity.getTicksRequiredToFreeze()
++ 80);\n entity.setTicksFrozen(frozen);\n entity.addEffect(new
+MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1, false, false));\n if
+(rng.nextFloat() < 0.25F) {\n entity.addEffect(new
+MobEffectInstance(MobEffects.BLINDNESS, 30, 0, false, false));\n }\n
+entity.setDeltaMovement(entity.getDeltaMovement().add(active.dirX * 0.12, 0.0,
+active.dirZ * 0.12));\n entity.hurtMarked = true;\n if (frozen >=
+entity.getTicksRequiredToFreeze() && active.ticksElapsed % 30 == 0) {\n
+entity.hurt(level.damageSources().freeze(), 1.5F);\n }\n }\n }\n }\n\n if
+(active.ticksElapsed % 2 == 0) {\n for (int i = 0; i < 8; i++) {\n int rx =
+pPos.getX() + rng.nextInt(37) - 18;\n int rz = pPos.getZ() + rng.nextInt(37)
+- 18;\n BlockPos surf = getSurfaceBlockPos(level, rx, rz);\n if (surf == null)
+{\n continue;\n }\n BlockState st = level.getBlockState(surf);\n BlockPos above
+= surf.above();\n BlockState aboveSt = level.getBlockState(above);\n if
+(st.is(Blocks.WATER) && st.getFluidState().isSource()) {\n level.setBlock(surf,
+Blocks.ICE.defaultBlockState(), 3);\n } else if (aboveSt.is(Blocks.SNOW)) {\n
+int layers = aboveSt.getValue(SnowLayerBlock.LAYERS);\n if (layers < 6) {\n
+level.setBlock(above, aboveSt.setValue(SnowLayerBlock.LAYERS, layers + 1), 3);\n
+} else if (rng.nextFloat() < 0.08F) {\n level.setBlock(above,
+Blocks.POWDER_SNOW.defaultBlockState(), 3);\n }\n } else if (aboveSt.isAir() &&
+st.isFaceSturdy(level, surf, Direction.UP)) {\n level.setBlock(above,
+Blocks.SNOW.defaultBlockState(), 3);\n }\n }\n }\n }\n }\n\n private static void
+tickHeatwave(ServerLevel level, ActiveDisaster active) {\n RandomSource rng =
+level.random;\n for (ServerPlayer player : level.players()) {\n BlockPos pPos =
+player.blockPosition();\n if (active.ticksElapsed % 3 == 0) {\n
+level.sendParticles(HEAT_DUST, pPos.getX(), pPos.getY() + 2.0,
+pPos.getZ(), 10, 12.0, 3.0, 12.0, 0.04);\n }\n\n if (active.ticksElapsed % 25
+== 0) {\n AABB area = new AABB(pPos).inflate(30.0, 16.0, 30.0);\n for
+(LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {\n
+if (isVulnerableLiving(entity) && !entity.isInWater() &&
+level.canSeeSky(entity.blockPosition().above())) {\n entity.addEffect(new
+MobEffectInstance(MobEffects.HUNGER, 80, 1, false, false));\n
+entity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0, false,
+false));\n entity.addEffect(new
+MobEffectInstance(MobEffects.DIG_SLOWDOWN, 80, 0, false, false));\n if
+(rng.nextFloat() < 0.45F) {\n
+entity.hurt(level.damageSources().onFire(), 1.5F);\n
+entity.setSecondsOnFire(2);\n }\n }\n }\n }\n\n if (active.ticksElapsed % 3
+== 0) {\n for (int i = 0; i < 6; i++) {\n int rx = pPos.getX() + rng.nextInt(37)
+- 18;\n int rz = pPos.getZ() + rng.nextInt(37) - 18;\n BlockPos surf =
+getTopSurfaceIncludingLeaves(level, rx, rz);\n if (surf == null) {\n continue;\n
+}\n BlockState st = level.getBlockState(surf);\n if (st.is(Blocks.GRASS_BLOCK))
+{\n level.setBlock(surf, rng.nextFloat() < 0.35F ?
+Blocks.SAND.defaultBlockState() : Blocks.COARSE_DIRT.defaultBlockState(), 3);\n
+} else if (st.is(Blocks.FARMLAND)) {\n level.setBlock(surf,
+Blocks.DIRT.defaultBlockState(), 3);\n } else if (st.is(Blocks.WATER)) {\n
+level.setBlock(surf, Blocks.AIR.defaultBlockState(), 3);\n
+level.playSound((Player) null, surf.getX(), surf.getY(), surf.getZ(),\n
+SoundEvents.FIRE_EXTINGUISH, SoundSource.WEATHER, 0.4F, 1.3F);\n } else if
+(st.is(BlockTags.SNOW) || st.is(BlockTags.ICE)) {\n level.setBlock(surf,
+Blocks.AIR.defaultBlockState(), 3);\n } else if (isFlammableNatural(st) &&
+rng.nextFloat() < 0.08F && level.getBlockState(surf.above()).isAir()) {\n
+level.setBlock(surf.above(), Blocks.FIRE.defaultBlockState(), 3);\n }\n }\n }\n
+}\n }\n\n private static void tickSandstorm(ServerLevel level, ActiveDisaster
+active) {\n RandomSource rng = level.random;\n for (ServerPlayer player :
+level.players()) {\n BlockPos pPos = player.blockPosition();\n
+level.sendParticles(SAND_DUST, pPos.getX(), pPos.getY() + 3.0,
+pPos.getZ(), 22, 12.0, 4.0, 12.0, 0.18);\n\n if (active.ticksElapsed % 2 == 0)
+{\n AABB area = new AABB(pPos).inflate(28.0, 16.0, 28.0);\n for (LivingEntity
+entity : level.getEntitiesOfClass(LivingEntity.class, area)) {\n if
+(isVulnerableLiving(entity) && level.canSeeSky(entity.blockPosition().above()))
+{\n entity.setDeltaMovement(entity.getDeltaMovement().add(active.dirX
+* 0.14, 0.0, active.dirZ * 0.14));\n entity.hurtMarked = true;\n if
+(active.ticksElapsed % 20 == 0) {\n entity.addEffect(new
+MobEffectInstance(MobEffects.DARKNESS, 60, 0, false, false));\n
+entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 0,
+false, false));\n if (entity.getItemBySlot(EquipmentSlot.HEAD).isEmpty()) {\n
+entity.hurt(level.damageSources().generic(), 1.0F);\n }\n }\n }\n }\n }\n\n if
+(active.ticksElapsed % 6 == 0) {\n for (int i = 0; i < 3; i++) {\n int rx =
+pPos.getX() + rng.nextInt(33) - 16;\n int rz = pPos.getZ() + rng.nextInt(33)
+- 16;\n BlockPos surf = getSurfaceBlockPos(level, rx, rz);\n if (surf != null)
+{\n BlockPos dropPos = surf.above(9);\n if (level.isLoaded(dropPos) &&
+level.getBlockState(dropPos).isAir() && level.canSeeSky(dropPos)) {\n
+FallingBlockEntity sand = FallingBlockEntity.fall(level, dropPos,
+Blocks.SAND.defaultBlockState());\n sand.setDeltaMovement(active.dirX * 0.35,
+-0.35, active.dirZ * 0.35);\n }\n }\n }\n }\n\n if (active.ticksElapsed % 28
+== 0) {\n level.playSound((Player) null, pPos.getX(), pPos.getY(),
+pPos.getZ(),\n SoundEvents.SAND_BREAK, SoundSource.WEATHER, 0.9F, 0.6F);\n }\n
+}\n }\n\n private static void tickSupercellStorm(ServerLevel level,
+ActiveDisaster active) {\n RandomSource rng = level.random;\n if
+(active.ticksElapsed % 14 == 0) {\n ServerPlayer player =
+level.players().get(rng.nextInt(level.players().size()));\n BlockPos pPos =
+player.blockPosition();\n BlockPos targetPos = null;\n\n for (int dx = -16; dx
+<= 16 && targetPos == null; dx += 2) {\n for (int dz = -16; dz <= 16 &&
+targetPos == null; dz += 2) {\n BlockPos surf = getSurfaceBlockPos(level,
+pPos.getX() + dx, pPos.getZ() + dz);\n if (surf != null &&
+level.getBlockState(surf).is(Blocks.LIGHTNING_ROD)) {\n targetPos = surf;\n }\n
+}\n }\n\n if (targetPos == null) {\n AABB area = new
+AABB(pPos).inflate(26.0, 16.0, 26.0);\n for (LivingEntity entity :
+level.getEntitiesOfClass(LivingEntity.class, area)) {\n if
+(isVulnerableLiving(entity) && wearsMetalArmor(entity)\n &&
+level.canSeeSky(entity.blockPosition().above()) && rng.nextFloat() < 0.45F) {\n
+targetPos = entity.blockPosition();\n break;\n }\n }\n }\n\n if (targetPos ==
+null) {\n BlockPos highest = null;\n for (int i = 0; i < 6; i++) {\n int rx =
+pPos.getX() + rng.nextInt(49) - 24;\n int rz = pPos.getZ() + rng.nextInt(49)
+- 24;\n BlockPos candidate = getSurfaceBlockPos(level, rx, rz);\n if (candidate
+!= null && (highest == null || candidate.getY() > highest.getY())) {\n highest =
+candidate;\n }\n }\n targetPos = highest;\n }\n\n if (targetPos != null) {\n
+active.pendingLightnings.add(new PendingLightning(targetPos.above(), 16));\n }\n
+}\n\n Iterator it = active.pendingLightnings.iterator();\n while (it.hasNext())
+{\n PendingLightning pl = it.next();\n pl.fuse--;\n
+level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pl.pos.getX() + 0.5,
+pl.pos.getY() + 1.2, pl.pos.getZ() + 0.5,\n 8, 0.5, 1.5, 0.5, 0.12);\n if
+(pl.fuse <= 0) {\n active.recentBolts.add(new BoltFlash(pl.pos.getX() + 0.5,
+pl.pos.getY(), pl.pos.getZ() + 0.5, 9));\n LightningBolt bolt =
+EntityType.LIGHTNING_BOLT.create(level);\n if (bolt != null) {\n
+bolt.moveTo(Vec3.atBottomCenterOf(pl.pos));\n level.addFreshEntity(bolt);\n }\n
+it.remove();\n }\n }\n }\n\n private static void tickHailstorm(ServerLevel
+level, ActiveDisaster active) {\n RandomSource rng = level.random;\n if
+(active.ticksElapsed % 2 == 0) {\n for (ServerPlayer player : level.players())
+{\n for (int i = 0; i < 3; i++) {\n double hx = player.getX() +
+(rng.nextDouble() - 0.5) * 34.0;\n double hz = player.getZ() + (rng.nextDouble()
+- 0.5) * 34.0;\n int surfY = level.getHeight(Heightmap.Types.WORLD_SURFACE,
+(int) hx, (int) hz);\n double hy = Math.min(level.getMaxBuildHeight() - 4, surfY
++ 26.0);\n active.hailstones.add(new HailProjectile(hx, hy, hz, active.dirX
+* 0.25, -1.85, active.dirZ * 0.25));\n }\n }\n }\n\n Iterator it =
+active.hailstones.iterator();\n while (it.hasNext()) {\n HailProjectile h =
+it.next();\n h.x += h.vx;\n h.y += h.vy;\n h.z += h.vz;\n h.age++;\n\n
+level.sendParticles(ParticleTypes.SNOWFLAKE, h.x, h.y,
+h.z, 2, 0.1, 0.1, 0.1, 0.02);\n BlockPos pos = BlockPos.containing(h.x, h.y,
+h.z);\n if (!level.isLoaded(pos) || h.age > 35 || pos.getY() <=
+level.getMinBuildHeight() + 2) {\n it.remove();\n continue;\n }\n\n BlockState
+st = level.getBlockState(pos);\n if (st.blocksMotion() ||
+isFragileGlassOrDecor(st) || st.is(BlockTags.LEAVES)) {\n
+level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK,
+Blocks.PACKED_ICE.defaultBlockState()),\n h.x, h.y + 0.5,
+h.z, 8, 0.35, 0.35, 0.35, 0.15);\n if (isFragileGlassOrDecor(st) ||
+st.is(BlockTags.LEAVES)) {\n level.destroyBlock(pos, false);\n
+level.playSound((Player) null, h.x, h.y, h.z, SoundEvents.GLASS_BREAK,
+SoundSource.WEATHER, 0.55F, 1.3F);\n } else if (rng.nextFloat() < 0.15F &&
+level.getBlockState(pos.above()).isAir() && st.isFaceSturdy(level, pos,
+Direction.UP)) {\n level.setBlock(pos.above(),
+Blocks.SNOW.defaultBlockState(), 3);\n }\n\n AABB hitBox = new AABB(h.x - 1.5,
+h.y - 1.5, h.z - 1.5, h.x + 1.5, h.y + 1.5, h.z + 1.5);\n for (LivingEntity
+entity : level.getEntitiesOfClass(LivingEntity.class, hitBox)) {\n if
+(isVulnerableLiving(entity)) {\n ItemStack helmet =
+entity.getItemBySlot(EquipmentSlot.HEAD);\n float dmg = helmet.isEmpty() ? 3.0F
+: 1.0F;\n entity.hurt(level.damageSources().generic(), dmg);\n if
+(!helmet.isEmpty() && helmet.isDamageableItem()) {\n helmet.hurtAndBreak(1,
+entity, e -> e.broadcastBreakEvent(EquipmentSlot.HEAD));\n }\n }\n }\n
+it.remove();\n }\n }\n }\n\n private static void tickHurricane(ServerLevel
+level, ActiveDisaster active) {\n RandomSource rng = level.random;\n double gust
+= 0.75 + 0.55 * Math.sin(active.ticksElapsed * 0.08);\n active.lastIntensity =
+(float) gust;\n\n for (ServerPlayer player : level.players()) {\n BlockPos pPos
+= player.blockPosition();\n level.sendParticles(ParticleTypes.RAIN, pPos.getX(),
+pPos.getY() + 6.0, pPos.getZ(), 24, 14.0, 6.0, 14.0, 0.3);\n\n AABB area = new
+AABB(pPos).inflate(32.0, 20.0, 32.0);\n for (Entity entity :
+level.getEntitiesOfClass(Entity.class, area)) {\n if (entity instanceof Player p
+&& (p.isCreative() || p.isSpectator())) {\n continue;\n }\n if
+(level.canSeeSky(entity.blockPosition().above())) {\n double push = 0.20 *
+gust;\n entity.setDeltaMovement(entity.getDeltaMovement().add(active.dirX *
+push, 0.025 * gust, active.dirZ * push));\n entity.hurtMarked = true;\n if
+(entity.horizontalCollision && gust > 1.05 && active.ticksElapsed % 10 == 0\n &&
+entity instanceof LivingEntity living && isVulnerableLiving(living)) {\n
+living.hurt(level.damageSources().flyIntoWall(), 1.5F);\n }\n }\n }\n\n if
+(active.ticksElapsed % 4 == 0) {\n for (int i = 0; i < 5; i++) {\n int rx =
+pPos.getX() + rng.nextInt(37) - 18;\n int rz = pPos.getZ() + rng.nextInt(37)
+- 18;\n BlockPos surf = getTopSurfaceIncludingLeaves(level, rx, rz);\n if (surf
+== null) {\n continue;\n }\n BlockState st = level.getBlockState(surf);\n if
+(st.is(BlockTags.LEAVES) || isFragileGlassOrDecor(st) ||
+st.is(BlockTags.FENCES)\n || (st.is(BlockTags.PLANKS) && rng.nextFloat()
+< 0.2F)) {\n FallingBlockEntity debris = FallingBlockEntity.fall(level, surf,
+st);\n debris.disableDrop();\n debris.setDeltaMovement(active.dirX * 1.15 *
+gust, 0.45, active.dirZ * 1.15 * gust);\n }\n }\n }\n\n if (active.ticksElapsed
+% 45 == 0) {\n BlockPos strike = getSurfaceBlockPos(level, pPos.getX() +
+rng.nextInt(45) - 22, pPos.getZ() + rng.nextInt(45) - 22);\n if (strike != null)
+{\n active.recentBolts.add(new BoltFlash(strike.getX() + 0.5, strike.getY(),
+strike.getZ() + 0.5, 9));\n LightningBolt bolt =
+EntityType.LIGHTNING_BOLT.create(level);\n if (bolt != null) {\n
+bolt.moveTo(Vec3.atBottomCenterOf(strike.above()));\n
+level.addFreshEntity(bolt);\n }\n }\n }\n }\n }\n\n private static void
+tickLandslide(ServerLevel level, ActiveDisaster active) {\n RandomSource rng =
+level.random;\n Direction[] cardinals = {Direction.NORTH, Direction.SOUTH,
+Direction.EAST, Direction.WEST};\n\n for (ServerPlayer player : level.players())
+{\n BlockPos pPos = player.blockPosition();\n if (active.ticksElapsed % 2 == 0)
+{\n for (int i = 0; i < 8; i++) {\n int rx = pPos.getX() + rng.nextInt(41)
+- 20;\n int rz = pPos.getZ() + rng.nextInt(41) - 20;\n BlockPos surf =
+getSurfaceBlockPos(level, rx, rz);\n if (surf == null) {\n continue;\n }\n
+BlockState st = level.getBlockState(surf);\n if (!(st.is(BlockTags.DIRT) ||
+st.is(BlockTags.SAND) || st.is(Blocks.GRAVEL)\n || st.is(Blocks.CLAY) ||
+st.is(Blocks.STONE) || st.is(Blocks.COBBLESTONE) || st.is(Blocks.MUD))) {\n
+continue;\n }\n Direction downhill = null;\n for (Direction dir : cardinals) {\n
+BlockPos sideDown = surf.relative(dir).below();\n if (level.isLoaded(sideDown)
+&& !level.getBlockState(sideDown).blocksMotion()) {\n downhill = dir;\n break;\n
+}\n }\n if (downhill != null) {\n BlockState slideState =
+(st.is(Blocks.GRASS_BLOCK) || st.is(Blocks.DIRT)) ?
+Blocks.MUD.defaultBlockState() : st;\n FallingBlockEntity slide =
+FallingBlockEntity.fall(level, surf, slideState);\n
+slide.setHurtsEntities(3.0F, 16);\n slide.setDeltaMovement(downhill.getStepX()
+* 0.45, 0.15, downhill.getStepZ() * 0.45);\n if (rng.nextFloat() < 0.3F) {\n
+level.playSound((Player) null, surf.getX(), surf.getY(), surf.getZ(),\n
+SoundEvents.GRAVEL_BREAK, SoundSource.WEATHER, 0.8F, 0.65F);\n }\n } else if
+(st.is(Blocks.GRASS_BLOCK) && rng.nextFloat() < 0.2F) {\n level.setBlock(surf,
+Blocks.MUD.defaultBlockState(), 3);\n }\n }\n }\n\n if (active.ticksElapsed % 20
+== 0) {\n AABB area = new AABB(pPos).inflate(25.0, 12.0, 25.0);\n for
+(LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {\n
+if (isVulnerableLiving(entity) &&
+level.getBlockState(entity.blockPosition().below()).is(Blocks.MUD)) {\n
+entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 50, 2,
+false, false));\n }\n }\n }\n }\n }\n\n private static void
+tickSinkhole(ServerLevel level, ActiveDisaster active) {\n RandomSource rng =
+level.random;\n int cx = active.origin.getX();\n int cz =
+active.origin.getZ();\n if (!level.isLoaded(active.origin)) {\n return;\n }\n
+int surfY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx,
+cz);\n active.movingX = cx + 0.5;\n active.movingY = surfY;\n active.movingZ =
+cz + 0.5;\n\n if (active.ticksElapsed < 40) {\n if (active.ticksElapsed % 10
+== 0) {\n level.playSound((Player) null, cx, surfY, cz, SoundEvents.WARDEN_ROAR,
+SoundSource.WEATHER, 1.3F, 0.5F);\n }\n return;\n }\n\n float progress =
+Math.min(1.0F, (active.ticksElapsed - 40) / 480.0F);\n int radius = Math.max(2,
+(int) Math.round(2.0 + progress * 9.0));\n\n if (active.ticksElapsed % 2 == 0)
+{\n for (int i = 0; i < 10; i++) {\n int dx = rng.nextInt(radius * 2 + 1) -
+radius;\n int dz = rng.nextInt(radius * 2 + 1) - radius;\n double distSq = dx *
+dx + dz * dz;\n if (distSq > radius * radius) {\n continue;\n }\n double dist =
+Math.sqrt(distSq);\n int colX = cx + dx;\n int colZ = cz + dz;\n BlockPos top =
+getSurfaceBlockPos(level, colX, colZ);\n if (top == null) {\n continue;\n }\n
+int maxDepth = (int) Math.round((1.0 - (dist / (radius + 1.5))) * 14.0) + 3;\n
+int targetFloor = Math.max(level.getMinBuildHeight() + 5, surfY - maxDepth);\n
+if (top.getY() > targetFloor) {\n BlockState st = level.getBlockState(top);\n if
+(isBreakableByDisaster(level, top, st, 5.0F)) {\n BlockPos lower =
+top.below();\n if (lower.getY() > targetFloor && isBreakableByDisaster(level,
+lower, level.getBlockState(lower), 5.0F)) {\n level.destroyBlock(lower,
+false);\n }\n FallingBlockEntity collapsed = FallingBlockEntity.fall(level, top,
+st);\n collapsed.disableDrop();\n }\n }\n }\n }\n\n if (active.ticksElapsed % 16
+== 0) {\n level.playSound((Player) null, cx, surfY - 2, cz,
+SoundEvents.STONE_BREAK, SoundSource.WEATHER, 1.3F, 0.55F);\n }\n }\n\n private
+static void tickWildfire(ServerLevel level, ActiveDisaster active) {\n
+RandomSource rng = level.random;\n for (ServerPlayer player : level.players())
+{\n BlockPos pPos = player.blockPosition();\n
+level.sendParticles(ParticleTypes.FLAME, pPos.getX(), pPos.getY() + 3.0,
+pPos.getZ(), 10, 14.0, 4.0, 14.0, 0.14);\n
+level.sendParticles(ParticleTypes.LAVA, pPos.getX(), pPos.getY() + 4.0,
+pPos.getZ(), 5, 12.0, 4.0, 12.0, 0.12);\n\n if (active.ticksElapsed % 3 == 0)
+{\n for (int i = 0; i < 6; i++) {\n int rx = pPos.getX() + rng.nextInt(37) - 18
++ (int) Math.round(active.dirX * 5.0);\n int rz = pPos.getZ() + rng.nextInt(37)
+- 18 + (int) Math.round(active.dirZ * 5.0);\n BlockPos surf =
+getTopSurfaceIncludingLeaves(level, rx, rz);\n if (surf == null) {\n continue;\n
+}\n BlockState st = level.getBlockState(surf);\n BlockPos above =
+surf.above();\n if (level.getBlockState(above).isAir() &&
+(isFlammableNatural(st) || (st.is(Blocks.GRASS_BLOCK) && rng.nextFloat()
+< 0.2F))) {\n level.setBlock(above, Blocks.FIRE.defaultBlockState(), 3);\n }\n
+}\n }\n\n if (active.ticksElapsed % 22 == 0) {\n AABB area = new
+AABB(pPos).inflate(26.0, 14.0, 26.0);\n for (LivingEntity entity :
+level.getEntitiesOfClass(LivingEntity.class, area)) {\n if
+(isVulnerableLiving(entity) && isNearFire(level, entity.blockPosition())) {\n
+entity.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 40, 0, false,
+false));\n entity.addEffect(new MobEffectInstance(MobEffects.POISON, 50, 0,
+false, false));\n }\n }\n level.playSound((Player) null, pPos.getX(),
+pPos.getY(), pPos.getZ(),\n SoundEvents.FIRE_AMBIENT,
+SoundSource.WEATHER, 1.0F, 0.75F);\n }\n }\n }\n\n private static void
+tickSolarFlare(ServerLevel level, ActiveDisaster active) {\n RandomSource rng =
+level.random;\n for (ServerPlayer player : level.players()) {\n BlockPos pPos =
+player.blockPosition();\n if (active.ticksElapsed % 2 == 0) {\n
+level.sendParticles(SOLAR_GOLD, pPos.getX(), pPos.getY() + 7.0,
+pPos.getZ(), 10, 14.0, 5.0, 14.0, 0.08);\n }\n\n if (active.ticksElapsed % 20
+== 0) {\n AABB area = new AABB(pPos).inflate(30.0, 18.0, 30.0);\n for
+(LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, area)) {\n
+if (isVulnerableLiving(entity) &&
+level.canSeeSky(entity.blockPosition().above())) {\n entity.addEffect(new
+MobEffectInstance(MobEffects.GLOWING, 60, 0, false, false));\n
+entity.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 55, 0, false,
+false));\n entity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 1,
+false, false));\n entity.hurt(level.damageSources().onFire(), 1.5F);\n
+entity.setSecondsOnFire(2);\n }\n }\n }\n\n if (active.ticksElapsed % 5 == 0)
+{\n for (int i = 0; i < 8; i++) {\n BlockPos check = pPos.offset(rng.nextInt(33)
+- 16, rng.nextInt(13) - 6, rng.nextInt(33) - 16);\n if (!level.isLoaded(check))
+{\n continue;\n }\n BlockState st = level.getBlockState(check);\n if
+(st.is(Blocks.REDSTONE_WIRE) || st.is(Blocks.REPEATER) ||
+st.is(Blocks.COMPARATOR)\n || st.is(Blocks.REDSTONE_LAMP) ||
+st.is(Blocks.REDSTONE_TORCH)) {\n
+level.sendParticles(ParticleTypes.ELECTRIC_SPARK, check.getX() + 0.5,
+check.getY() + 0.5, check.getZ() + 0.5,\n 10, 0.4, 0.4, 0.4, 0.15);\n
+level.playSound((Player) null, check.getX(), check.getY(), check.getZ(),\n
+SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.WEATHER, 0.8F, 1.8F);\n if
+(rng.nextFloat() < 0.35F && (st.is(Blocks.REDSTONE_WIRE) ||
+st.is(Blocks.REDSTONE_TORCH))) {\n level.destroyBlock(check, true);\n }\n }\n
+}\n }\n }\n }\n\n private static void drainBatchTemporaryWater(ServerLevel
+level, ActiveDisaster active, int maxCount) {\n int drained = 0;\n Iterator it =
+active.temporaryWater.iterator();\n while (it.hasNext() && drained < maxCount)
+{\n BlockPos pos = it.next();\n if (level.isLoaded(pos) &&
+level.getBlockState(pos).is(Blocks.WATER)) {\n level.setBlock(pos,
+Blocks.AIR.defaultBlockState(), 3);\n }\n it.remove();\n drained++;\n }\n }\n\n
+private static void drainAllTemporaryWater(ServerLevel level, ActiveDisaster
+active) {\n for (BlockPos pos : active.temporaryWater) {\n if
+(level.isLoaded(pos) && level.getBlockState(pos).is(Blocks.WATER)) {\n
+level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);\n }\n }\n
+active.temporaryWater.clear();\n }\n\n private static BlockPos
+getSurfaceBlockPos(ServerLevel level, int x, int z) {\n BlockPos probe = new
+BlockPos(x, level.getSeaLevel(), z);\n if (!level.isLoaded(probe)) {\n return
+null;\n }\n int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+x, z) - 1;\n if (y <= level.getMinBuildHeight() + 1) {\n return null;\n }\n
+return new BlockPos(x, y, z);\n }\n\n private static BlockPos
+getTopSurfaceIncludingLeaves(ServerLevel level, int x, int z) {\n BlockPos probe
+= new BlockPos(x, level.getSeaLevel(), z);\n if (!level.isLoaded(probe)) {\n
+return null;\n }\n int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z)
+- 1;\n if (y <= level.getMinBuildHeight() + 1) {\n return null;\n }\n return new
+BlockPos(x, y, z);\n }\n\n private static boolean
+isVulnerableLiving(LivingEntity entity) {\n if (entity instanceof Player p) {\n
+return !p.isCreative() && !p.isSpectator();\n }\n return true;\n }\n\n private
+static boolean isBreakableByDisaster(ServerLevel level, BlockPos pos, BlockState
+state, float maxHardness) {\n if (state.isAir() || state.hasBlockEntity() ||
+!state.getFluidState().isEmpty()) {\n return false;\n }\n float speed =
+state.getDestroySpeed(level, pos);\n return speed >= 0.0F && speed <=
+maxHardness;\n }\n\n private static boolean isFragileGlassOrDecor(BlockState
+state) {\n return state.getBlock() instanceof AbstractGlassBlock\n ||
+state.getBlock() instanceof StainedGlassPaneBlock\n ||
+state.is(Blocks.GLASS_PANE)\n || state.is(Blocks.TORCH)\n ||
+state.is(Blocks.WALL_TORCH)\n || state.is(Blocks.LANTERN)\n ||
+state.is(BlockTags.FLOWERS)\n || state.is(BlockTags.CROPS)\n ||
+state.is(Blocks.GRASS)\n || state.is(Blocks.TALL_GRASS);\n }\n\n private static
+boolean isFlammableNatural(BlockState state) {\n return
+state.is(BlockTags.LEAVES)\n || state.is(BlockTags.LOGS)\n ||
+state.is(BlockTags.PLANKS)\n || state.is(BlockTags.WOOL)\n ||
+state.is(BlockTags.FENCES)\n || state.is(Blocks.GRASS)\n ||
+state.is(Blocks.TALL_GRASS);\n }\n\n private static boolean
+isNearHeatSource(ServerLevel level, BlockPos center) {\n for (int dx = -4; dx
+<= 4; dx++) {\n for (int dy = -2; dy <= 2; dy++) {\n for (int dz = -4; dz <= 4;
+dz++) {\n BlockPos p = center.offset(dx, dy, dz);\n if (!level.isLoaded(p)) {\n
+continue;\n }\n BlockState st = level.getBlockState(p);\n if
+(st.is(BlockTags.FIRE) || st.is(BlockTags.CAMPFIRES) || st.is(Blocks.LAVA)\n ||
+st.is(Blocks.MAGMA_BLOCK) || st.is(Blocks.TORCH) || st.is(Blocks.LANTERN)\n ||
+st.is(Blocks.FURNACE)) {\n return true;\n }\n }\n }\n }\n return false;\n }\n\n
+private static boolean isNearFire(ServerLevel level, BlockPos center) {\n for
+(int dx = -5; dx <= 5; dx++) {\n for (int dy = -2; dy <= 3; dy++) {\n for (int
+dz = -5; dz <= 5; dz++) {\n BlockPos p = center.offset(dx, dy, dz);\n if
+(level.isLoaded(p) && level.getBlockState(p).is(BlockTags.FIRE)) {\n return
+true;\n }\n }\n }\n }\n return false;\n }\n\n private static boolean
+wearsMetalArmor(LivingEntity entity) {\n EquipmentSlot[] slots =
+{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS,
+EquipmentSlot.FEET};\n for (EquipmentSlot slot : slots) {\n ItemStack stack =
+entity.getItemBySlot(slot);\n if (stack.getItem() instanceof ArmorItem armor)
+{\n if (armor.getMaterial() == ArmorMaterials.IRON\n || armor.getMaterial() ==
+ArmorMaterials.GOLD\n || armor.getMaterial() == ArmorMaterials.CHAIN) {\n return
+true;\n }\n }\n }\n return false;\n }\n\n private static class ActiveDisaster
+{\n final DisasterType type;\n final ServerBossEvent bossBar;\n final int
+totalDuration;\n final BlockPos origin;\n int ticksElapsed;\n double dirX;\n
+double dirZ;\n double movingX;\n double movingY;\n double movingZ;\n int
+waveStep;\n float lastIntensity = 1.0F;\n boolean initialized;\n final List
+meteors = new ArrayList<>();\n final List hailstones = new ArrayList<>();\n
+final List pendingLightnings = new ArrayList<>();\n final List recentBolts = new
+ArrayList<>();\n final List temporaryWater = new ArrayList<>();\n\n
+ActiveDisaster(DisasterType type, ServerBossEvent bossBar, int totalDuration,
+BlockPos origin, double dirX, double dirZ) {\n this.type = type;\n this.bossBar
+= bossBar;\n this.totalDuration = totalDuration;\n this.origin = origin;\n
+this.dirX = dirX;\n this.dirZ = dirZ;\n this.movingX = origin.getX() + 0.5;\n
+this.movingY = origin.getY();\n this.movingZ = origin.getZ() + 0.5;\n }\n }\n\n
+private static class BoltFlash {\n final double x;\n final double y;\n final
+double z;\n int life;\n\n BoltFlash(double x, double y, double z, int life) {\n
+this.x = x;\n this.y = y;\n this.z = z;\n this.life = life;\n }\n }\n\n private
+static class MeteorProjectile {\n double x;\n double y;\n double z;\n final
+double vx;\n final double vy;\n final double vz;\n final float power;\n int
+age;\n\n MeteorProjectile(double x, double y, double z, double vx, double vy,
+double vz, float power) {\n this.x = x;\n this.y = y;\n this.z = z;\n this.vx =
+vx;\n this.vy = vy;\n this.vz = vz;\n this.power = power;\n }\n }\n\n private
+static class HailProjectile {\n double x;\n double y;\n double z;\n final double
+vx;\n final double vy;\n final double vz;\n int age;\n\n HailProjectile(double
+x, double y, double z, double vx, double vy, double vz) {\n this.x = x;\n this.y
+= y;\n this.z = z;\n this.vx = vx;\n this.vy = vy;\n this.vz = vz;\n }\n }\n\n
+private static class PendingLightning {\n final BlockPos pos;\n int fuse;\n\n
+PendingLightning(BlockPos pos, int fuse) {\n this.pos = pos;\n this.fuse =
+fuse;\n }\n }\n}\n" }, { "ordem": 15, "caminho":
+"src/main/java/com/cataclismo/cataclismomod/client/ClientDisasterState.java",
+"conteudo": "package com.cataclismo.cataclismomod.client;\n\nimport
+com.cataclismo.cataclismomod.DisasterNetwork;\nimport
+com.cataclismo.cataclismomod.DisasterType;\nimport java.util.ArrayList;\nimport
+java.util.Iterator;\nimport java.util.List;\nimport java.util.Random;\nimport
+net.minecraft.client.Minecraft;\n\npublic class ClientDisasterState {\n public
+static DisasterType activeType = null;\n public static int ticksElapsed = 0;\n
+public static int totalDuration = 1;\n public static double originX = 0.0;\n
+public static double originY = 64.0;\n public static double originZ = 0.0;\n
+public static double targetMovingX = 0.0;\n public static double targetMovingY
+= 64.0;\n public static double targetMovingZ = 0.0;\n public static double
+smoothMovingX = 0.0;\n public static double smoothMovingY = 64.0;\n public
+static double smoothMovingZ = 0.0;\n public static double dirX = 1.0;\n public
+static double dirZ = 0.0;\n public static int waveStep = 0;\n public static
+float targetIntensity = 0.0F;\n public static float smoothIntensity = 0.0F;\n
+public static float skyFade = 0.0F;\n public static float flashAlpha = 0.0F;\n
+public static int clientTicks = 0;\n public static double[] meteorCoords = new
+double[0];\n public static final List bolts = new ArrayList<>();\n private
+static final Random RNG = new Random();\n\n public static void
+applySync(DisasterNetwork.DisasterSyncPacket pkt) {\n if (pkt.disasterOrdinal
+< 0 || pkt.disasterOrdinal >= DisasterType.values().length) {\n activeType =
+null;\n targetIntensity = 0.0F;\n meteorCoords = new double[0];\n return;\n }\n
+DisasterType incoming = DisasterType.byIndex(pkt.disasterOrdinal);\n boolean
+changed = (activeType != incoming);\n activeType = incoming;\n ticksElapsed =
+pkt.ticksElapsed;\n totalDuration = Math.max(1, pkt.totalDuration);\n originX =
+pkt.originX;\n originY = pkt.originY;\n originZ = pkt.originZ;\n targetMovingX =
+pkt.movingX;\n targetMovingY = pkt.movingY;\n targetMovingZ = pkt.movingZ;\n if
+(changed) {\n smoothMovingX = targetMovingX;\n smoothMovingY = targetMovingY;\n
+smoothMovingZ = targetMovingZ;\n bolts.clear();\n }\n dirX = pkt.dirX;\n dirZ =
+pkt.dirZ;\n waveStep = pkt.waveStep;\n targetIntensity = pkt.intensity;\n
+meteorCoords = pkt.meteorCoords;\n\n if (pkt.boltCoords.length >= 3 &&
+RNG.nextFloat() < 0.65F) {\n for (int i = 0; i + 2 < pkt.boltCoords.length; i
++= 3) {\n double bx = pkt.boltCoords[i];\n double by = pkt.boltCoords[i + 1];\n
+double bz = pkt.boltCoords[i + 2];\n if (bolts.size() < 8) {\n spawnBolt(bx, by
++ 72.0, bz, bx + (RNG.nextDouble() - 0.5) * 8.0, by, bz + (RNG.nextDouble()
+- 0.5) * 8.0, 9);\n }\n }\n }\n }\n\n public static void reset() {\n activeType
+= null;\n targetIntensity = 0.0F;\n smoothIntensity = 0.0F;\n skyFade = 0.0F;\n
+flashAlpha = 0.0F;\n meteorCoords = new double[0];\n bolts.clear();\n }\n\n
+public static void clientTick() {\n Minecraft mc = Minecraft.getInstance();\n if
+(mc.level == null || mc.player == null || mc.isPaused()) {\n return;\n }\n
+clientTicks++;\n\n if (activeType != null) {\n skyFade = Math.min(1.0F, skyFade
++ 0.035F);\n smoothIntensity += (targetIntensity - smoothIntensity) * 0.12F;\n
+smoothMovingX += (targetMovingX - smoothMovingX) * 0.25;\n smoothMovingY +=
+(targetMovingY - smoothMovingY) * 0.25;\n smoothMovingZ += (targetMovingZ -
+smoothMovingZ) * 0.25;\n } else {\n skyFade = Math.max(0.0F, skyFade - 0.04F);\n
+smoothIntensity = Math.max(0.0F, smoothIntensity - 0.05F);\n }\n\n flashAlpha =
+Math.max(0.0F, flashAlpha - 0.09F);\n\n Iterator it = bolts.iterator();\n while
+(it.hasNext()) {\n ProceduralBolt b = it.next();\n b.life--;\n if (b.life <= 0)
+{\n it.remove();\n }\n }\n\n if (activeType == DisasterType.TORNADO) {\n if
+(clientTicks % 18 == 0 || (RNG.nextFloat() < 0.07F && bolts.size() < 5)) {\n
+double side = RNG.nextBoolean() ? 1.0 : -1.0;\n double angle = RNG.nextDouble()
+* Math.PI * 2.0;\n double dist = 16.0 + RNG.nextDouble() * 24.0;\n double topX =
+smoothMovingX + Math.cos(angle) * (dist * 0.75) + side * 6.0;\n double topZ =
+smoothMovingZ + Math.sin(angle) * (dist * 0.75);\n double botX = smoothMovingX +
+Math.cos(angle) * dist;\n double botZ = smoothMovingZ + Math.sin(angle) *
+dist;\n spawnBolt(topX, smoothMovingY + 76.0, topZ, botX, smoothMovingY - 2.0,
+botZ, 7 + RNG.nextInt(5));\n flashAlpha = Math.min(1.0F, flashAlpha + 0.55F);\n
+}\n } else if (activeType == DisasterType.SUPERCELL_STORM || activeType ==
+DisasterType.HURRICANE) {\n if (RNG.nextFloat() < 0.09F && bolts.size() < 6) {\n
+double angle = RNG.nextDouble() * Math.PI * 2.0;\n double dist = 18.0 +
+RNG.nextDouble() * 48.0;\n double bx = mc.player.getX() + Math.cos(angle) *
+dist;\n double bz = mc.player.getZ() + Math.sin(angle) * dist;\n double by =
+mc.player.getY() - 4.0;\n spawnBolt(bx + (RNG.nextDouble() - 0.5) * 14.0, by
++ 84.0, bz + (RNG.nextDouble() - 0.5) * 14.0, bx, by, bz, 7 + RNG.nextInt(5));\n
+flashAlpha = Math.min(1.0F, flashAlpha + 0.65F);\n }\n } else if (activeType ==
+DisasterType.VOLCANIC_ERUPTION) {\n if (RNG.nextFloat() < 0.06F && bolts.size()
+< 4) {\n double angle = RNG.nextDouble() * Math.PI * 2.0;\n double dist = 6.0 +
+RNG.nextDouble() * 14.0;\n double topX = smoothMovingX + Math.cos(angle) *
+dist;\n double topZ = smoothMovingZ + Math.sin(angle) * dist;\n spawnBolt(topX,
+smoothMovingY + 62.0, topZ, smoothMovingX + (RNG.nextDouble() - 0.5) * 8.0,
+smoothMovingY + 12.0, smoothMovingZ + (RNG.nextDouble() - 0.5) * 8.0, 6 +
+RNG.nextInt(4));\n flashAlpha = Math.min(1.0F, flashAlpha + 0.35F);\n }\n }\n
+}\n\n public static void spawnBolt(double x1, double y1, double z1, double x2,
+double y2, double z2, int maxLife) {\n ProceduralBolt bolt = new
+ProceduralBolt(maxLife);\n int segs = 14;\n double prevX = x1;\n double prevY =
+y1;\n double prevZ = z1;\n for (int i = 1; i <= segs; i++) {\n double t = i /
+(double) segs;\n double jitter = (i == segs) ? 0.0 : (1.0 - Math.abs(t - 0.5)
+* 1.5) * 5.2;\n double nx = x1 + (x2 - x1) * t + (RNG.nextDouble() - 0.5) *
+jitter;\n double ny = y1 + (y2 - y1) * t;\n double nz = z1 + (z2 - z1) * t +
+(RNG.nextDouble() - 0.5) * jitter;\n bolt.segments.add(new BoltSegment(prevX,
+prevY, prevZ, nx, ny, nz, 1.0F));\n\n if (i >= 3 && i <= 10 && RNG.nextFloat()
+< 0.38F) {\n double fx = nx;\n double fy = ny;\n double fz = nz;\n double fdx =
+(RNG.nextDouble() - 0.5) * 7.5;\n double fdz = (RNG.nextDouble() - 0.5) * 7.5;\n
+int branchSteps = 3 + RNG.nextInt(3);\n for (int b = 1; b <= branchSteps; b++)
+{\n double bx = fx + fdx * 0.45 + (RNG.nextDouble() - 0.5) * 2.2;\n double by =
+fy - (3.5 + RNG.nextDouble() * 3.0);\n double bz = fz + fdz * 0.45 +
+(RNG.nextDouble() - 0.5) * 2.2;\n float scale = 0.55F * (1.0F - (b / (float)
+(branchSteps + 1)));\n bolt.segments.add(new BoltSegment(fx, fy, fz, bx, by, bz,
+scale));\n fx = bx;\n fy = by;\n fz = bz;\n }\n }\n prevX = nx;\n prevY = ny;\n
+prevZ = nz;\n }\n bolts.add(bolt);\n }\n\n public static class ProceduralBolt
+{\n public final List segments = new ArrayList<>();\n public int life;\n public
+final int maxLife;\n\n public ProceduralBolt(int maxLife) {\n this.life =
+maxLife;\n this.maxLife = maxLife;\n }\n }\n\n public static class BoltSegment
+{\n public final double x1, y1, z1, x2, y2, z2;\n public final float
+thicknessScale;\n\n public BoltSegment(double x1, double y1, double z1, double
+x2, double y2, double z2, float thicknessScale) {\n this.x1 = x1;\n this.y1 =
+y1;\n this.z1 = z1;\n this.x2 = x2;\n this.y2 = y2;\n this.z2 = z2;\n
+this.thicknessScale = thicknessScale;\n }\n }\n}\n" }, { "ordem": 16, "caminho":
+"src/main/java/com/cataclismo/cataclismomod/client/RealisticDisasterRenderer.java",
+"conteudo": "package com.cataclismo.cataclismomod.client;\n\nimport
+com.cataclismo.cataclismomod.CataclismoMod;\nimport
+com.cataclismo.cataclismomod.DisasterType;\nimport
+com.mojang.blaze3d.platform.GlStateManager;\nimport
+com.mojang.blaze3d.systems.RenderSystem;\nimport
+com.mojang.blaze3d.vertex.BufferBuilder;\nimport
+com.mojang.blaze3d.vertex.DefaultVertexFormat;\nimport
+com.mojang.blaze3d.vertex.PoseStack;\nimport
+com.mojang.blaze3d.vertex.Tesselator;\nimport
+com.mojang.blaze3d.vertex.VertexFormat;\nimport
+net.minecraft.client.Minecraft;\nimport
+net.minecraft.client.renderer.GameRenderer;\nimport
+net.minecraft.world.phys.Vec3;\nimport
+net.minecraftforge.api.distmarker.Dist;\nimport
+net.minecraftforge.client.event.ClientPlayerNetworkEvent;\nimport
+net.minecraftforge.client.event.RenderLevelStageEvent;\nimport
+net.minecraftforge.client.event.ViewportEvent;\nimport
+net.minecraftforge.event.TickEvent;\nimport
+net.minecraftforge.eventbus.api.SubscribeEvent;\nimport
+net.minecraftforge.fml.common.Mod;\nimport
+org.joml.Matrix4f;\n\n@Mod.EventBusSubscriber(modid = CataclismoMod.MOD_ID,
+value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)\npublic class
+RealisticDisasterRenderer {\n\n @SubscribeEvent\n public static void
+onClientTick(TickEvent.ClientTickEvent event) {\n if (event.phase ==
+TickEvent.Phase.END) {\n ClientDisasterState.clientTick();\n }\n }\n\n
+@SubscribeEvent\n public static void
+onLogout(ClientPlayerNetworkEvent.LoggingOut event) {\n
+ClientDisasterState.reset();\n }\n\n @SubscribeEvent\n public static void
+onFogColor(ViewportEvent.ComputeFogColor event) {\n if
+(ClientDisasterState.activeType == null || ClientDisasterState.skyFade <= 0.01F)
+{\n return;\n }\n float fade = ClientDisasterState.skyFade;\n float tr
+= 0.42F;\n float tg = 0.45F;\n float tb = 0.50F;\n\n switch
+(ClientDisasterState.activeType) {\n case TORNADO, SUPERCELL_STORM, HURRICANE ->
+{ tr = 0.35F; tg = 0.38F; tb = 0.44F; }\n case TSUNAMI -> { tr = 0.28F; tg
+= 0.36F; tb = 0.43F; }\n case VOLCANIC_ERUPTION -> { tr = 0.24F; tg = 0.17F; tb
+= 0.15F; }\n case METEOR_SHOWER -> { tr = 0.25F; tg = 0.14F; tb = 0.18F; }\n
+case ACID_RAIN -> { tr = 0.26F; tg = 0.45F; tb = 0.22F; }\n case BLIZZARD -> {
+tr = 0.80F; tg = 0.85F; tb = 0.90F; }\n case HEATWAVE -> { tr = 0.84F; tg
+= 0.56F; tb = 0.32F; }\n case SANDSTORM -> { tr = 0.72F; tg = 0.55F; tb = 0.32F;
+}\n case HAILSTORM -> { tr = 0.28F; tg = 0.37F; tb = 0.36F; }\n case EARTHQUAKE,
+LANDSLIDE, SINKHOLE -> { tr = 0.50F; tg = 0.45F; tb = 0.40F; }\n case WILDFIRE
+-> { tr = 0.46F; tg = 0.25F; tb = 0.14F; }\n case SOLAR_FLARE -> { tr = 0.60F;
+tg = 0.36F; tb = 0.48F; }\n }\n\n float flash = ClientDisasterState.flashAlpha
+* 0.42F;\n float r = lerp(event.getRed(), clamp01(tr + flash * 0.85F), fade
+* 0.85F);\n float g = lerp(event.getGreen(), clamp01(tg + flash * 0.92F), fade
+* 0.85F);\n float b = lerp(event.getBlue(), clamp01(tb + flash), fade
+* 0.85F);\n event.setRed(r);\n event.setGreen(g);\n event.setBlue(b);\n }\n\n
+@SubscribeEvent\n public static void onRenderFog(ViewportEvent.RenderFog event)
+{\n if (ClientDisasterState.activeType == null || ClientDisasterState.skyFade
+<= 0.01F) {\n return;\n }\n float targetFar = 120.0F;\n float targetNear
+= 10.0F;\n switch (ClientDisasterState.activeType) {\n case TORNADO,
+SUPERCELL_STORM, VOLCANIC_ERUPTION, METEOR_SHOWER -> { targetNear = 18.0F;
+targetFar = 128.0F; }\n case TSUNAMI, HURRICANE, HAILSTORM -> { targetNear
+= 10.0F; targetFar = 95.0F; }\n case ACID_RAIN, WILDFIRE -> { targetNear = 6.0F;
+targetFar = 64.0F; }\n case BLIZZARD, SANDSTORM -> { targetNear = 3.0F;
+targetFar = 42.0F; }\n case HEATWAVE, SOLAR_FLARE -> { targetNear = 18.0F;
+targetFar = 118.0F; }\n case EARTHQUAKE, LANDSLIDE, SINKHOLE -> { targetNear
+= 12.0F; targetFar = 92.0F; }\n }\n float fade = ClientDisasterState.skyFade;\n
+float newFar = lerp(event.getFarPlaneDistance(),
+Math.min(event.getFarPlaneDistance(), targetFar), fade);\n float newNear =
+lerp(event.getNearPlaneDistance(), Math.min(newFar * 0.25F, targetNear),
+fade);\n event.setNearPlaneDistance(newNear);\n
+event.setFarPlaneDistance(newFar);\n event.setCanceled(true);\n }\n\n
+@SubscribeEvent\n public static void
+onCameraAngles(ViewportEvent.ComputeCameraAngles event) {\n Minecraft mc =
+Minecraft.getInstance();\n if (ClientDisasterState.activeType == null ||
+mc.player == null || ClientDisasterState.skyFade <= 0.05F) {\n return;\n }\n
+double time = ClientDisasterState.clientTicks + event.getPartialTick();\n float
+shake = 0.0F;\n double dist = Math.hypot(mc.player.getX() -
+ClientDisasterState.smoothMovingX, mc.player.getZ() -
+ClientDisasterState.smoothMovingZ);\n\n switch (ClientDisasterState.activeType)
+{\n case EARTHQUAKE -> shake = 1.65F * ClientDisasterState.smoothIntensity;\n
+case SINKHOLE -> shake = (float) Math.max(0.25, 1.5 - dist * 0.025);\n case
+VOLCANIC_ERUPTION -> shake = (float) Math.max(0.2, 1.15 - dist * 0.015);\n case
+TORNADO -> shake = (float) Math.max(0.15, 1.35 - dist * 0.022);\n case TSUNAMI
+-> shake = (float) Math.max(0.15, 1.1 - dist * 0.02);\n case HURRICANE,
+LANDSLIDE -> shake = 0.45F * ClientDisasterState.smoothIntensity;\n case
+METEOR_SHOWER -> shake = 0.35F;\n default -> shake = 0.0F;\n }\n shake = shake *
+ClientDisasterState.skyFade;\n if (shake > 0.01F) {\n float yawOff = (float)
+(Math.sin(time * 2.1) * 0.75 + Math.cos(time * 3.7) * 0.45) * shake;\n float
+pitchOff = (float) (Math.cos(time * 2.6) * 0.65 + Math.sin(time * 4.3) * 0.35) *
+shake;\n float rollOff = (float) (Math.sin(time * 1.9) * 0.9) * shake;\n
+event.setYaw(event.getYaw() + yawOff);\n event.setPitch(event.getPitch() +
+pitchOff);\n event.setRoll(event.getRoll() + rollOff);\n }\n }\n\n
+@SubscribeEvent\n public static void onRenderWorld(RenderLevelStageEvent event)
+{\n if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_WEATHER) {\n
+return;\n }\n DisasterType type = ClientDisasterState.activeType;\n if (type ==
+null || ClientDisasterState.skyFade <= 0.01F) {\n return;\n }\n Minecraft mc =
+Minecraft.getInstance();\n if (mc.level == null || mc.player == null) {\n
+return;\n }\n\n Vec3 cam = event.getCamera().getPosition();\n PoseStack
+poseStack = event.getPoseStack();\n float time =
+(ClientDisasterState.clientTicks + event.getPartialTick()) * 0.05F;\n float fade
+= ClientDisasterState.skyFade;\n\n RenderSystem.enableBlend();\n
+RenderSystem.defaultBlendFunc();\n RenderSystem.enableDepthTest();\n
+RenderSystem.depthMask(false);\n RenderSystem.disableCull();\n
+RenderSystem.setShader(GameRenderer::getPositionColorShader);\n
+RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);\n\n switch (type) {\n case
+TORNADO -> {\n renderSupercellWallCloud(poseStack, cam,
+ClientDisasterState.smoothMovingX, ClientDisasterState.smoothMovingY + 76.0,
+ClientDisasterState.smoothMovingZ, 118.0F, time, fade, 0.22F, 0.24F, 0.28F);\n
+renderRealisticTornado(poseStack, cam, ClientDisasterState.smoothMovingX,
+ClientDisasterState.smoothMovingY - 1.5, ClientDisasterState.smoothMovingZ,
+time, fade);\n renderAllLightningBolts(poseStack, cam, fade);\n }\n case
+SUPERCELL_STORM -> {\n renderSupercellWallCloud(poseStack, cam,
+mc.player.getX(), mc.player.getY() + 72.0, mc.player.getZ(), 126.0F, time,
+fade, 0.18F, 0.20F, 0.26F);\n renderAllLightningBolts(poseStack, cam, fade);\n
+}\n case HURRICANE -> {\n renderSupercellWallCloud(poseStack, cam,
+mc.player.getX(), mc.player.getY() + 64.0, mc.player.getZ(), 132.0F, time
+* 1.4F, fade, 0.22F, 0.26F, 0.30F);\n renderAtmosphericSheets(poseStack, cam,
+mc.player.getX(), mc.player.getY(), mc.player.getZ(), time * 2.2F,
+fade, 0.60F, 0.66F, 0.72F, 0.16F, 12);\n renderAllLightningBolts(poseStack, cam,
+fade);\n }\n case HAILSTORM -> {\n renderSupercellWallCloud(poseStack, cam,
+mc.player.getX(), mc.player.getY() + 66.0, mc.player.getZ(), 118.0F, time,
+fade, 0.20F, 0.28F, 0.27F);\n renderAtmosphericSheets(poseStack, cam,
+mc.player.getX(), mc.player.getY(), mc.player.getZ(), time * 1.6F,
+fade, 0.74F, 0.84F, 0.88F, 0.14F, 8);\n }\n case TSUNAMI -> {\n
+renderSupercellWallCloud(poseStack, cam, ClientDisasterState.smoothMovingX,
+ClientDisasterState.smoothMovingY + 68.0,
+ClientDisasterState.smoothMovingZ, 110.0F, time * 0.7F, fade
+* 0.75F, 0.24F, 0.29F, 0.35F);\n renderRealisticTsunami(poseStack, cam,
+ClientDisasterState.smoothMovingX, ClientDisasterState.smoothMovingY,
+ClientDisasterState.smoothMovingZ, ClientDisasterState.dirX,
+ClientDisasterState.dirZ, time, fade);\n }\n case VOLCANIC_ERUPTION -> {\n
+renderVolcanicPlume(poseStack, cam, ClientDisasterState.smoothMovingX,
+ClientDisasterState.smoothMovingY + 5.0, ClientDisasterState.smoothMovingZ,
+time, fade);\n renderAllLightningBolts(poseStack, cam, fade);\n }\n case
+METEOR_SHOWER -> {\n renderRealisticMeteors(poseStack, cam,
+ClientDisasterState.dirX, ClientDisasterState.dirZ, time, fade);\n }\n case
+SOLAR_FLARE -> {\n renderSolarAurora(poseStack, cam, mc.player.getX(),
+mc.player.getY() + 58.0, mc.player.getZ(), time, fade);\n }\n case SANDSTORM ->
+{\n renderAtmosphericSheets(poseStack, cam, mc.player.getX(), mc.player.getY(),
+mc.player.getZ(), time * 1.9F, fade, 0.78F, 0.60F, 0.34F, 0.26F, 14);\n }\n case
+BLIZZARD -> {\n renderAtmosphericSheets(poseStack, cam, mc.player.getX(),
+mc.player.getY(), mc.player.getZ(), time * 2.1F,
+fade, 0.90F, 0.94F, 0.98F, 0.24F, 14);\n }\n case ACID_RAIN -> {\n
+renderSupercellWallCloud(poseStack, cam, mc.player.getX(), mc.player.getY()
++ 62.0, mc.player.getZ(), 110.0F, time * 0.6F, fade, 0.20F, 0.34F, 0.16F);\n
+renderAtmosphericSheets(poseStack, cam, mc.player.getX(), mc.player.getY(),
+mc.player.getZ(), time * 1.2F, fade, 0.36F, 0.76F, 0.26F, 0.16F, 10);\n }\n case
+WILDFIRE -> {\n renderSupercellWallCloud(poseStack, cam, mc.player.getX(),
+mc.player.getY() + 56.0, mc.player.getZ(), 115.0F, time * 0.6F,
+fade, 0.24F, 0.16F, 0.12F);\n renderAtmosphericSheets(poseStack, cam,
+mc.player.getX(), mc.player.getY(), mc.player.getZ(), time * 1.1F,
+fade, 0.45F, 0.22F, 0.12F, 0.18F, 10);\n }\n case HEATWAVE -> {\n
+renderAtmosphericSheets(poseStack, cam, mc.player.getX(), mc.player.getY(),
+mc.player.getZ(), time * 0.8F, fade, 1.00F, 0.62F, 0.24F, 0.10F, 8);\n }\n case
+EARTHQUAKE, LANDSLIDE, SINKHOLE -> {\n renderAtmosphericSheets(poseStack, cam,
+mc.player.getX(), mc.player.getY(), mc.player.getZ(), time * 0.9F,
+fade, 0.56F, 0.50F, 0.42F, 0.13F, 8);\n }\n }\n\n
+RenderSystem.depthMask(true);\n RenderSystem.enableCull();\n
+RenderSystem.defaultBlendFunc();\n RenderSystem.disableBlend();\n }\n\n private
+static void renderSupercellWallCloud(PoseStack poseStack, Vec3 cam, double cx,
+double cy, double cz,\n float maxRadius, float time, float fade, float baseR,
+float baseG, float baseB) {\n poseStack.pushPose();\n poseStack.translate(cx -
+cam.x, cy - cam.y, cz - cam.z);\n Matrix4f m = poseStack.last().pose();\n\n
+Tesselator tess = Tesselator.getInstance();\n BufferBuilder buf =
+tess.getBuilder();\n buf.begin(VertexFormat.Mode.TRIANGLES,
+DefaultVertexFormat.POSITION_COLOR);\n\n float flash =
+ClientDisasterState.flashAlpha * 0.30F;\n int rings = 6;\n int segs = 36;\n\n
+for (int layer = 0; layer < 4; layer++) {\n float layerY = layer * 6.5F;\n float
+layerScale = 0.52F + layer * 0.22F;\n float layerRot = time * (0.14F - layer
+* 0.025F) * (layer % 2 == 0 ? 1.0F : -0.7F);\n float layerAlpha = (0.52F - layer
+* 0.09F) * fade;\n\n for (int r = 0; r < rings; r++) {\n float t0 = r / (float)
+rings;\n float t1 = (r + 1) / (float) rings;\n float rad0 = maxRadius *
+layerScale * t0;\n float rad1 = maxRadius * layerScale * t1;\n float dip0 =
+-10.5F * (1.0F - t0) * (1.0F - t0) + (layer == 0 ? -4.0F * (1.0F - t0)
+: 0.0F);\n float dip1 = -10.5F * (1.0F - t1) * (1.0F - t1) + (layer == 0 ? -4.0F
+* (1.0F - t1) : 0.0F);\n float a0 = layerAlpha * (1.0F - t0 * t0);\n float a1 =
+layerAlpha * (1.0F - t1 * t1);\n float shade0 = 0.72F + t0 * 0.28F;\n float
+shade1 = 0.72F + t1 * 0.28F;\n\n for (int s = 0; s < segs; s++) {\n float ang0 =
+(float) (s * Math.PI * 2.0 / segs) + layerRot;\n float ang1 = (float) ((s + 1) *
+Math.PI * 2.0 / segs) + layerRot;\n float wave0 = 1.0F + 0.09F * (float)
+Math.sin(ang0 * 5.0F + layer * 1.7F);\n float wave1 = 1.0F + 0.09F * (float)
+Math.sin(ang1 * 5.0F + layer * 1.7F);\n\n float x00 = (float) Math.cos(ang0) *
+rad0 * wave0;\n float z00 = (float) Math.sin(ang0) * rad0 * wave0;\n float x01 =
+(float) Math.cos(ang1) * rad0 * wave1;\n float z01 = (float) Math.sin(ang1) *
+rad0 * wave1;\n float x10 = (float) Math.cos(ang0) * rad1 * wave0;\n float z10 =
+(float) Math.sin(ang0) * rad1 * wave0;\n float x11 = (float) Math.cos(ang1) *
+rad1 * wave1;\n float z11 = (float) Math.sin(ang1) * rad1 * wave1;\n\n float y0
+= layerY + dip0;\n float y1 = layerY + dip1;\n\n float cr0 = clamp01(baseR *
+shade0 + flash * (1.0F - t0));\n float cg0 = clamp01(baseG * shade0 + flash *
+(1.0F - t0));\n float cb0 = clamp01(baseB * shade0 + flash * 1.15F * (1.0F -
+t0));\n float cr1 = clamp01(baseR * shade1 + flash * (1.0F - t1));\n float cg1 =
+clamp01(baseG * shade1 + flash * (1.0F - t1));\n float cb1 = clamp01(baseB *
+shade1 + flash * 1.15F * (1.0F - t1));\n\n addQuad(buf, m,\n x00, y0, z00, cr0,
+cg0, cb0, a0,\n x01, y0, z01, cr0, cg0, cb0, a0,\n x11, y1, z11, cr1, cg1, cb1,
+a1,\n x10, y1, z10, cr1, cg1, cb1, a1);\n }\n }\n }\n\n tess.end();\n
+poseStack.popPose();\n }\n\n private static void
+renderRealisticTornado(PoseStack poseStack, Vec3 cam, double cx, double cy,
+double cz, float time, float fade) {\n poseStack.pushPose();\n
+poseStack.translate(cx - cam.x, cy - cam.y, cz - cam.z);\n Matrix4f m =
+poseStack.last().pose();\n\n Tesselator tess = Tesselator.getInstance();\n
+BufferBuilder buf = tess.getBuilder();\n buf.begin(VertexFormat.Mode.TRIANGLES,
+DefaultVertexFormat.POSITION_COLOR);\n\n float totalHeight = 82.0F;\n int vSegs
+= 28;\n int rSegs = 24;\n float flash = ClientDisasterState.flashAlpha
+* 0.24F;\n\n float[] shellMult = {0.82F, 1.18F, 1.62F};\n float[] shellAlpha =
+{0.62F, 0.32F, 0.14F};\n float[] shellSpeed = {2.4F, 1.7F, 1.1F};\n\n for (int
+shell = 0; shell < 3; shell++) {\n float sMult = shellMult[shell];\n float
+sAlpha = shellAlpha[shell] * fade;\n float sSpeed = shellSpeed[shell];\n\n for
+(int v = 0; v < vSegs; v++) {\n float t0 = v / (float) vSegs;\n float t1 = (v
++ 1) / (float) vSegs;\n float y0 = t0 * totalHeight;\n float y1 = t1 *
+totalHeight;\n\n float rad0 = funnelRadius(t0) * sMult;\n float rad1 =
+funnelRadius(t1) * sMult;\n\n float swayX0 = (float) (Math.sin(t0 * 4.4F - time
+* 1.1F) * (1.8F + t0 * 7.5F) + t0 * t0 * 6.5F);\n float swayZ0 = (float)
+(Math.cos(t0 * 3.8F - time * 0.9F) * (1.4F + t0 * 5.2F));\n float swayX1 =
+(float) (Math.sin(t1 * 4.4F - time * 1.1F) * (1.8F + t1 * 7.5F) + t1 * t1
+* 6.5F);\n float swayZ1 = (float) (Math.cos(t1 * 3.8F - time * 0.9F) * (1.4F +
+t1 * 5.2F));\n\n float rot0 = time * sSpeed + t0 * 7.5F;\n float rot1 = time *
+sSpeed + t1 * 7.5F;\n\n float edgeFade0 = (t0 < 0.06F) ? (t0 / 0.06F) : (t0
+> 0.90F ? (1.0F - (t0 - 0.90F) / 0.10F) : 1.0F);\n float edgeFade1 = (t1
+< 0.06F) ? (t1 / 0.06F) : (t1 > 0.90F ? (1.0F - (t1 - 0.90F) / 0.10F) : 1.0F);\n
+float a0 = clamp01(sAlpha * edgeFade0);\n float a1 = clamp01(sAlpha *
+edgeFade1);\n\n for (int r = 0; r < rSegs; r++) {\n float ang0 = (float) (r *
+Math.PI * 2.0 / rSegs);\n float ang1 = (float) ((r + 1) * Math.PI * 2.0 /
+rSegs);\n\n float wob00 = 1.0F + 0.08F * (float) Math.sin(ang0 * 3.0F + rot0);\n
+float wob01 = 1.0F + 0.08F * (float) Math.sin(ang1 * 3.0F + rot0);\n float wob10
+= 1.0F + 0.08F * (float) Math.sin(ang0 * 3.0F + rot1);\n float wob11 = 1.0F
++ 0.08F * (float) Math.sin(ang1 * 3.0F + rot1);\n\n float x00 = swayX0 + (float)
+Math.cos(ang0 + rot0) * rad0 * wob00;\n float z00 = swayZ0 + (float)
+Math.sin(ang0 + rot0) * rad0 * wob00;\n float x01 = swayX0 + (float)
+Math.cos(ang1 + rot0) * rad0 * wob01;\n float z01 = swayZ0 + (float)
+Math.sin(ang1 + rot0) * rad0 * wob01;\n float x10 = swayX1 + (float)
+Math.cos(ang0 + rot1) * rad1 * wob10;\n float z10 = swayZ1 + (float)
+Math.sin(ang0 + rot1) * rad1 * wob10;\n float x11 = swayX1 + (float)
+Math.cos(ang1 + rot1) * rad1 * wob11;\n float z11 = swayZ1 + (float)
+Math.sin(ang1 + rot1) * rad1 * wob11;\n\n float lit0 = 0.24F + 0.12F * (float)
+Math.cos(ang0 + rot0 - 0.6F) + (shell * 0.06F) + flash;\n float lit1 = 0.24F
++ 0.12F * (float) Math.cos(ang1 + rot0 - 0.6F) + (shell * 0.06F) + flash;\n
+float cr00 = clamp01(lit0 * (t0 < 0.18F ? 1.12F : 0.94F));\n float cg00 =
+clamp01(lit0 * 0.98F);\n float cb00 = clamp01(lit0 * (t0 < 0.18F ? 0.95F
+: 1.08F));\n float cr01 = clamp01(lit1 * (t0 < 0.18F ? 1.12F : 0.94F));\n float
+cg01 = clamp01(lit1 * 0.98F);\n float cb01 = clamp01(lit1 * (t0 < 0.18F ? 0.95F
+: 1.08F));\n\n addQuad(buf, m,\n x00, y0, z00, cr00, cg00, cb00, a0,\n x01, y0,
+z01, cr01, cg01, cb01, a0,\n x11, y1, z11, cr01, cg01, cb01, a1,\n x10, y1, z10,
+cr00, cg00, cb00, a1);\n }\n }\n }\n\n int debrisRings = 8;\n int debrisSegs
+= 24;\n for (int shell = 0; shell < 2; shell++) {\n float maxR = (shell == 0)
+? 16.5F : 24.0F;\n float maxH = (shell == 0) ? 12.5F : 18.0F;\n float baseA =
+(shell == 0 ? 0.44F : 0.22F) * fade;\n for (int v = 0; v < debrisRings; v++) {\n
+float t0 = v / (float) debrisRings;\n float t1 = (v + 1) / (float)
+debrisRings;\n float r0 = maxR * (float) Math.sin(t0 * Math.PI * 0.85F
++ 0.25F);\n float r1 = maxR * (float) Math.sin(t1 * Math.PI * 0.85F + 0.25F);\n
+float y0 = t0 * maxH;\n float y1 = t1 * maxH;\n float a0 = baseA * (1.0F - t0 *
+t0);\n float a1 = baseA * (1.0F - t1 * t1);\n float rot = time * (2.6F - shell
+* 0.9F);\n for (int s = 0; s < debrisSegs; s++) {\n float ang0 = (float) (s *
+Math.PI * 2.0 / debrisSegs) + rot;\n float ang1 = (float) ((s + 1) * Math.PI
+* 2.0 / debrisSegs) + rot;\n float bump0 = 1.0F + 0.14F * (float) Math.sin(ang0
+* 4.0F - time);\n float bump1 = 1.0F + 0.14F * (float) Math.sin(ang1 * 4.0F -
+time);\n addQuad(buf, m,\n (float) Math.cos(ang0) * r0 * bump0, y0, (float)
+Math.sin(ang0) * r0 * bump0, 0.34F, 0.33F, 0.32F, a0,\n (float) Math.cos(ang1) *
+r0 * bump1, y0, (float) Math.sin(ang1) * r0 * bump1, 0.34F, 0.33F, 0.32F, a0,\n
+(float) Math.cos(ang1) * r1 * bump1, y1, (float) Math.sin(ang1) * r1 *
+bump1, 0.28F, 0.29F, 0.31F, a1,\n (float) Math.cos(ang0) * r1 * bump0, y1,
+(float) Math.sin(ang0) * r1 * bump0, 0.28F, 0.29F, 0.31F, a1);\n }\n }\n }\n\n
+tess.end();\n poseStack.popPose();\n }\n\n private static float
+funnelRadius(float t) {\n if (t < 0.08F) {\n return 3.8F - (t / 0.08F) * 2.0F;\n
+}\n float body = (t - 0.08F) / 0.92F;\n return 1.8F + (float)
+Math.pow(body, 2.35) * 23.0F + body * 2.4F;\n }\n\n private static void
+renderAllLightningBolts(PoseStack poseStack, Vec3 cam, float fade) {\n if
+(ClientDisasterState.bolts.isEmpty()) {\n return;\n }\n
+RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+GlStateManager.DestFactor.ONE);\n\n poseStack.pushPose();\n Matrix4f m =
+poseStack.last().pose();\n Tesselator tess = Tesselator.getInstance();\n
+BufferBuilder buf = tess.getBuilder();\n buf.begin(VertexFormat.Mode.TRIANGLES,
+DefaultVertexFormat.POSITION_COLOR);\n\n for (ClientDisasterState.ProceduralBolt
+bolt : ClientDisasterState.bolts) {\n float lifeFrac = bolt.life / (float)
+Math.max(1, bolt.maxLife);\n float flicker = (bolt.life % 2 == 0) ? 1.0F
+: 0.72F;\n float alpha = clamp01(lifeFrac * flicker * fade);\n for
+(ClientDisasterState.BoltSegment seg : bolt.segments) {\n float x1 = (float)
+(seg.x1 - cam.x);\n float y1 = (float) (seg.y1 - cam.y);\n float z1 = (float)
+(seg.z1 - cam.z);\n float x2 = (float) (seg.x2 - cam.x);\n float y2 = (float)
+(seg.y2 - cam.y);\n float z2 = (float) (seg.z2 - cam.z);\n float s =
+seg.thicknessScale;\n\n drawCrossRibbon(buf, m, x1, y1, z1, x2, y2, z2, 2.6F *
+s, 0.24F, 0.58F, 1.00F, 0.22F * alpha);\n drawCrossRibbon(buf, m, x1, y1, z1,
+x2, y2, z2, 1.15F * s, 0.56F, 0.84F, 1.00F, 0.54F * alpha);\n
+drawCrossRibbon(buf, m, x1, y1, z1, x2, y2, z2, 0.34F *
+s, 1.00F, 1.00F, 1.00F, 0.96F * alpha);\n }\n }\n\n tess.end();\n
+poseStack.popPose();\n RenderSystem.defaultBlendFunc();\n }\n\n private static
+void drawCrossRibbon(BufferBuilder buf, Matrix4f m,\n float x1, float y1, float
+z1, float x2, float y2, float z2,\n float halfWidth, float r, float g, float b,
+float a) {\n addQuad(buf, m,\n x1 - halfWidth, y1, z1, r, g, b, a,\n x1 +
+halfWidth, y1, z1, r, g, b, a,\n x2 + halfWidth, y2, z2, r, g, b, a,\n x2 -
+halfWidth, y2, z2, r, g, b, a);\n addQuad(buf, m,\n x1, y1, z1 - halfWidth, r,
+g, b, a,\n x1, y1, z1 + halfWidth, r, g, b, a,\n x2, y2, z2 + halfWidth, r, g,
+b, a,\n x2, y2, z2 - halfWidth, r, g, b, a);\n }\n\n private static void
+renderRealisticTsunami(PoseStack poseStack, Vec3 cam, double cx, double cy,
+double cz,\n double dirX, double dirZ, float time, float fade) {\n
+poseStack.pushPose();\n poseStack.translate(cx - cam.x, cy - cam.y, cz -
+cam.z);\n Matrix4f m = poseStack.last().pose();\n\n Tesselator tess =
+Tesselator.getInstance();\n BufferBuilder buf = tess.getBuilder();\n
+buf.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);\n\n
+float perpX = (float) -dirZ;\n float perpZ = (float) dirX;\n float fx = (float)
+dirX;\n float fz = (float) dirZ;\n int widthSegs = 24;\n int curlSegs = 12;\n
+float halfW = 20.0F;\n\n for (int w = 0; w < widthSegs; w++) {\n float u0 =
+-1.0F + 2.0F * (w / (float) widthSegs);\n float u1 = -1.0F + 2.0F * ((w + 1) /
+(float) widthSegs);\n float hScale0 = (float) Math.cos(u0 * Math.PI * 0.42F)
+* 14.5F;\n float hScale1 = (float) Math.cos(u1 * Math.PI * 0.42F) * 14.5F;\n
+float swell0 = (float) Math.sin(u0 * 6.0F + time * 2.5F) * 0.85F;\n float swell1
+= (float) Math.sin(u1 * 6.0F + time * 2.5F) * 0.85F;\n\n for (int c = 0; c <
+curlSegs; c++) {\n float v0 = c / (float) curlSegs;\n float v1 = (c + 1) /
+(float) curlSegs;\n float y00 = (float) Math.sin(v0 * Math.PI * 0.72F) *
+(hScale0 + swell0);\n float y01 = (float) Math.sin(v0 * Math.PI * 0.72F) *
+(hScale1 + swell1);\n float y10 = (float) Math.sin(v1 * Math.PI * 0.72F) *
+(hScale0 + swell0);\n float y11 = (float) Math.sin(v1 * Math.PI * 0.72F) *
+(hScale1 + swell1);\n\n float fwd0 = -4.5F + v0 * 8.5F + (float) Math.sin(v0 *
+Math.PI) * 3.8F;\n float fwd1 = -4.5F + v1 * 8.5F + (float) Math.sin(v1 *
+Math.PI) * 3.8F;\n\n float x00 = perpX * u0 * halfW + fx * fwd0;\n float z00 =
+perpZ * u0 * halfW + fz * fwd0;\n float x01 = perpX * u1 * halfW + fx * fwd0;\n
+float z01 = perpZ * u1 * halfW + fz * fwd0;\n float x10 = perpX * u0 * halfW +
+fx * fwd1;\n float z10 = perpZ * u0 * halfW + fz * fwd1;\n float x11 = perpX *
+u1 * halfW + fx * fwd1;\n float z11 = perpZ * u1 * halfW + fz * fwd1;\n\n float
+foam0 = Math.max(0.0F, (v0 - 0.62F) / 0.38F);\n float foam1 = Math.max(0.0F, (v1
+- 0.62F) / 0.38F);\n float r0 = lerp(0.06F, 0.92F, foam0);\n float g0 =
+lerp(0.32F, 0.96F, foam0);\n float b0 = lerp(0.46F, 1.00F, foam0);\n float r1 =
+lerp(0.06F, 0.92F, foam1);\n float g1 = lerp(0.32F, 0.96F, foam1);\n float b1 =
+lerp(0.46F, 1.00F, foam1);\n float a0 = (0.72F - 0.25F * Math.abs(u0)) * fade;\n
+float a1 = (0.72F - 0.25F * Math.abs(u1)) * fade;\n\n addQuad(buf, m,\n x00,
+y00, z00, r0, g0, b0, a0,\n x01, y01, z01, r0, g0, b0, a1,\n x11, y11, z11, r1,
+g1, b1, a1,\n x10, y10, z10, r1, g1, b1, a0);\n }\n }\n\n tess.end();\n
+poseStack.popPose();\n }\n\n private static void renderVolcanicPlume(PoseStack
+poseStack, Vec3 cam, double cx, double cy, double cz, float time, float fade)
+{\n poseStack.pushPose();\n poseStack.translate(cx - cam.x, cy - cam.y, cz -
+cam.z);\n Matrix4f m = poseStack.last().pose();\n\n Tesselator tess =
+Tesselator.getInstance();\n BufferBuilder buf = tess.getBuilder();\n
+buf.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);\n\n
+int vSegs = 22;\n int rSegs = 22;\n float maxH = 92.0F;\n\n for (int shell = 0;
+shell < 2; shell++) {\n float sMult = (shell == 0) ? 0.92F : 1.38F;\n float
+sAlpha = (shell == 0 ? 0.64F : 0.30F) * fade;\n for (int v = 0; v < vSegs; v++)
+{\n float t0 = v / (float) vSegs;\n float t1 = (v + 1) / (float) vSegs;\n float
+y0 = t0 * maxH;\n float y1 = t1 * maxH;\n float rad0 = (3.5F + t0 * 10.0F + (t0
+> 0.62F ? (float) Math.pow((t0 - 0.62F) / 0.38F, 1.8) * 44.0F : 0.0F)) *
+sMult;\n float rad1 = (3.5F + t1 * 10.0F + (t1 > 0.62F ? (float) Math.pow((t1
+- 0.62F) / 0.38F, 1.8) * 44.0F : 0.0F)) * sMult;\n float a0 = sAlpha * (1.0F -
+(t0 > 0.82F ? (t0 - 0.82F) / 0.18F : 0.0F));\n float a1 = sAlpha * (1.0F - (t1
+> 0.82F ? (t1 - 0.82F) / 0.18F : 0.0F));\n\n float glow0 = Math.max(0.0F, 1.0F -
+t0 * 3.2F);\n float glow1 = Math.max(0.0F, 1.0F - t1 * 3.2F);\n float cr0 =
+lerp(0.14F, 1.00F, glow0);\n float cg0 = lerp(0.13F, 0.38F, glow0);\n float cb0
+= lerp(0.15F, 0.06F, glow0);\n float cr1 = lerp(0.14F, 1.00F, glow1);\n float
+cg1 = lerp(0.13F, 0.38F, glow1);\n float cb1 = lerp(0.15F, 0.06F, glow1);\n\n
+for (int r = 0; r < rSegs; r++) {\n float ang0 = (float) (r * Math.PI * 2.0 /
+rSegs) + time * 0.15F;\n float ang1 = (float) ((r + 1) * Math.PI * 2.0 / rSegs)
++ time * 0.15F;\n float puff0 = 1.0F + 0.14F * (float) Math.sin(ang0 * 4.0F + t0
+* 8.0F - time * 1.4F);\n float puff1 = 1.0F + 0.14F * (float) Math.sin(ang1
+* 4.0F + t0 * 8.0F - time * 1.4F);\n addQuad(buf, m,\n (float) Math.cos(ang0) *
+rad0 * puff0, y0, (float) Math.sin(ang0) * rad0 * puff0, cr0, cg0, cb0, a0,\n
+(float) Math.cos(ang1) * rad0 * puff1, y0, (float) Math.sin(ang1) * rad0 *
+puff1, cr0, cg0, cb0, a0,\n (float) Math.cos(ang1) * rad1 * puff1, y1, (float)
+Math.sin(ang1) * rad1 * puff1, cr1, cg1, cb1, a1,\n (float) Math.cos(ang0) *
+rad1 * puff0, y1, (float) Math.sin(ang0) * rad1 * puff0, cr1, cg1, cb1, a1);\n
+}\n }\n }\n\n tess.end();\n poseStack.popPose();\n }\n\n private static void
+renderRealisticMeteors(PoseStack poseStack, Vec3 cam, double dirX, double dirZ,
+float time, float fade) {\n double[] coords =
+ClientDisasterState.meteorCoords;\n if (coords.length < 3) {\n return;\n }\n
+RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+GlStateManager.DestFactor.ONE);\n\n poseStack.pushPose();\n Matrix4f m =
+poseStack.last().pose();\n Tesselator tess = Tesselator.getInstance();\n
+BufferBuilder buf = tess.getBuilder();\n buf.begin(VertexFormat.Mode.TRIANGLES,
+DefaultVertexFormat.POSITION_COLOR);\n\n float tx = (float) (-dirX * 16.0);\n
+float ty = 24.0F;\n float tz = (float) (-dirZ * 16.0);\n\n for (int i = 0; i + 2
+< coords.length; i += 3) {\n float mx = (float) (coords[i] - cam.x);\n float my
+= (float) (coords[i + 1] - cam.y);\n float mz = (float) (coords[i + 2] -
+cam.z);\n\n drawCrossRibbon(buf, m, mx, my, mz, mx + tx, my + ty, mz +
+tz, 3.6F, 1.00F, 0.34F, 0.06F, 0.34F * fade);\n drawCrossRibbon(buf, m, mx, my,
+mz, mx + tx * 0.65F, my + ty * 0.65F, mz + tz
+* 0.65F, 1.85F, 1.00F, 0.74F, 0.20F, 0.65F * fade);\n drawCrossRibbon(buf, m,
+mx, my, mz, mx + tx * 0.25F, my + ty * 0.25F, mz + tz
+* 0.25F, 0.95F, 1.00F, 0.98F, 0.85F, 0.95F * fade);\n }\n\n tess.end();\n
+poseStack.popPose();\n RenderSystem.defaultBlendFunc();\n }\n\n private static
+void renderSolarAurora(PoseStack poseStack, Vec3 cam, double cx, double cy,
+double cz, float time, float fade) {\n
+RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+GlStateManager.DestFactor.ONE);\n poseStack.pushPose();\n poseStack.translate(cx
+- cam.x, cy - cam.y, cz - cam.z);\n Matrix4f m = poseStack.last().pose();\n\n
+Tesselator tess = Tesselator.getInstance();\n BufferBuilder buf =
+tess.getBuilder();\n buf.begin(VertexFormat.Mode.TRIANGLES,
+DefaultVertexFormat.POSITION_COLOR);\n\n int segs = 36;\n for (int band = 0;
+band < 3; band++) {\n float zOff = (band - 1) * 34.0F;\n float hBand = 38.0F +
+band * 8.0F;\n for (int i = 0; i < segs; i++) {\n float t0 = (i / (float) segs)
+* 2.0F - 1.0F;\n float t1 = ((i + 1) / (float) segs) * 2.0F - 1.0F;\n float x0 =
+t0 * 115.0F;\n float x1 = t1 * 115.0F;\n float z0 = zOff + (float) Math.sin(t0
+* 4.5F + time * 0.9F + band * 1.6F) * 18.0F;\n float z1 = zOff + (float)
+Math.sin(t1 * 4.5F + time * 0.9F + band * 1.6F) * 18.0F;\n float edge0 = 1.0F -
+t0 * t0;\n float edge1 = 1.0F - t1 * t1;\n float aBot0 = 0.42F * edge0 * fade;\n
+float aBot1 = 0.42F * edge1 * fade;\n\n float rB = (band == 1) ? 0.95F
+: 0.18F;\n float gB = (band == 1) ? 0.30F : 0.98F;\n float bB = (band == 1)
+? 0.85F : 0.68F;\n\n addQuad(buf, m,\n x0, 0.0F, z0, rB, gB, bB, aBot0,\n
+x1, 0.0F, z1, rB, gB, bB, aBot1,\n x1, hBand, z1, 0.98F, 0.65F, 0.25F, 0.0F,\n
+x0, hBand, z0, 0.98F, 0.65F, 0.25F, 0.0F);\n }\n }\n\n tess.end();\n
+poseStack.popPose();\n RenderSystem.defaultBlendFunc();\n }\n\n private static
+void renderAtmosphericSheets(PoseStack poseStack, Vec3 cam, double cx, double
+cy, double cz,\n float time, float fade, float r, float g, float b, float alpha,
+int count) {\n poseStack.pushPose();\n poseStack.translate(cx - cam.x, cy -
+cam.y, cz - cam.z);\n Matrix4f m = poseStack.last().pose();\n\n Tesselator tess
+= Tesselator.getInstance();\n BufferBuilder buf = tess.getBuilder();\n
+buf.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);\n\n
+float dx = (float) ClientDisasterState.dirX;\n float dz = (float)
+ClientDisasterState.dirZ;\n float px = -dz;\n float pz = dx;\n float a = alpha *
+fade;\n\n for (int i = 0; i < count; i++) {\n float cycle = ((time * 14.0F + i *
+(96.0F / count)) % 96.0F) - 48.0F;\n float sway = (float) Math.sin(time * 0.7F +
+i * 1.3F) * 14.0F;\n float distFade = 1.0F - Math.abs(cycle) / 48.0F;\n float
+sheetA = a * distFade;\n float halfW = 36.0F;\n float yBot = -10.0F;\n float
+yTop = 34.0F;\n float centerX = dx * cycle + px * sway;\n float centerZ = dz *
+cycle + pz * sway;\n\n addQuad(buf, m,\n centerX - px * halfW, yBot, centerZ -
+pz * halfW, r, g, b, sheetA,\n centerX + px * halfW, yBot, centerZ + pz * halfW,
+r, g, b, sheetA,\n centerX + px * halfW + dx * 6.0F, yTop, centerZ + pz * halfW
++ dz * 6.0F, r, g, b, 0.0F,\n centerX - px * halfW + dx * 6.0F, yTop, centerZ -
+pz * halfW + dz * 6.0F, r, g, b, 0.0F);\n }\n\n tess.end();\n
+poseStack.popPose();\n }\n\n private static void addQuad(BufferBuilder buf,
+Matrix4f m,\n float x1, float y1, float z1, float r1, float g1, float b1, float
+a1,\n float x2, float y2, float z2, float r2, float g2, float b2, float a2,\n
+float x3, float y3, float z3, float r3, float g3, float b3, float a3,\n float
+x4, float y4, float z4, float r4, float g4, float b4, float a4) {\n
+buf.vertex(m, x1, y1, z1).color(r1, g1, b1, a1).endVertex();\n buf.vertex(m, x2,
+y2, z2).color(r2, g2, b2, a2).endVertex();\n buf.vertex(m, x3, y3, z3).color(r3,
+g3, b3, a3).endVertex();\n\n buf.vertex(m, x1, y1, z1).color(r1, g1, b1,
+a1).endVertex();\n buf.vertex(m, x3, y3, z3).color(r3, g3, b3,
+a3).endVertex();\n buf.vertex(m, x4, y4, z4).color(r4, g4, b4,
+a4).endVertex();\n }\n\n private static float lerp(float a, float b, float t)
+{\n return a + (b - a) * clamp01(t);\n }\n\n private static float clamp01(float
+v) {\n return Math.max(0.0F, Math.min(1.0F, v));\n }\n}\n" } ] }

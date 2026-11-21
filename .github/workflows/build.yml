@@ -16,57 +16,86 @@ jobs:
       - name: Extrair projeto e corrigir erros de compilacao
         run: |
           python3 - << 'EOF'
-          import json, os, glob
+          import json, os, re
 
-          source_file = None
           data = None
-          for f in glob.glob("*"):
-              if os.path.isfile(f) and f.endswith((".txt", ".json")):
-                  try:
-                      with open(f, "r", encoding="utf-8") as fp:
-                          candidate = json.load(fp)
-                      if "arquivos_do_projeto" in candidate:
-                          source_file = f
-                          data = candidate
-                          break
-                  except Exception:
-                      pass
+          source_file = None
+          all_files = []
 
-          if not source_file:
-              raise SystemExit("Erro: arquivo JSON do projeto nao encontrado na raiz do repositorio.")
+          for root, dirs, files in os.walk("."):
+              dirs[:] = [d for d in dirs if d not in (".git", ".github")]
+              for name in files:
+                  full_path = os.path.join(root, name)
+                  all_files.append(full_path)
+                  try:
+                      with open(full_path, "r", encoding="utf-8-sig", errors="replace") as fp:
+                          raw = fp.read()
+                  except Exception:
+                      continue
+
+                  if "arquivos_do_projeto" not in raw:
+                      continue
+
+                  start = raw.find("{")
+                  end = raw.rfind("}")
+                  if start == -1 or end == -1:
+                      continue
+                  snippet = raw[start:end + 1]
+
+                  try:
+                      candidate = json.loads(snippet)
+                  except json.JSONDecodeError:
+                      try:
+                          cleaned = snippet.replace("\r\n", " ").replace("\n", " ")
+                          candidate = json.loads(cleaned)
+                      except Exception as e:
+                          print(f"Arquivo encontrado ({full_path}), mas erro no JSON: {e}")
+                          continue
+
+                  if isinstance(candidate, dict) and "arquivos_do_projeto" in candidate:
+                      source_file = full_path
+                      data = candidate
+                      break
+              if data:
+                  break
+
+          if not data:
+              print("Arquivos encontrados no repositorio:", all_files)
+              raise SystemExit("Erro: arquivo do projeto nao encontrado ou JSON invalido.")
 
           print(f"Extraindo projeto de: {source_file}")
           for item in data["arquivos_do_projeto"]:
-              path = item["caminho"]
+              path = item["caminho"].strip()
               content = item["conteudo"]
 
               if path == "build.gradle":
-                  content = content.replace(
-                      "forge:{minecraft_version}-{forge_version}",
-                      "forge:${minecraft_version}-${forge_version}"
+                  content = re.sub(
+                      r"forge:\{minecraft_version\}-\{forge_version\}",
+                      "forge:${minecraft_version}-${forge_version}",
+                      content
                   )
               elif path.endswith("CataclismoMod.java"):
-                  content = content.replace("DeferredRegister ITEMS", "DeferredRegister<Item> ITEMS")
-                  content = content.replace("RegistryObject DISASTER_CONTROLLER", "RegistryObject<Item> DISASTER_CONTROLLER")
+                  content = re.sub(r"DeferredRegister\s+ITEMS", "DeferredRegister<Item> ITEMS", content)
+                  content = re.sub(r"RegistryObject\s+DISASTER_CONTROLLER", "RegistryObject<Item> DISASTER_CONTROLLER", content)
               elif path.endswith("DisasterControllerItem.java"):
-                  content = content.replace("InteractionResultHolder use(", "InteractionResultHolder<ItemStack> use(")
-                  content = content.replace("List tooltip,", "List<Component> tooltip,")
+                  content = re.sub(r"InteractionResultHolder\s+use\(", "InteractionResultHolder<ItemStack> use(", content)
+                  content = re.sub(r"List\s+tooltip,", "List<Component> tooltip,", content)
               elif path.endswith("DisasterManager.java"):
-                  content = content.replace("Map<ResourceKey, ActiveDisaster>", "Map<ResourceKey<Level>, ActiveDisaster>")
-                  content = content.replace("Iterator bit = active.recentBolts.iterator();", "Iterator<BoltFlash> bit = active.recentBolts.iterator();")
-                  content = content.replace("Iterator it = active.meteors.iterator();", "Iterator<MeteorProjectile> it = active.meteors.iterator();")
-                  content = content.replace("Iterator it = active.pendingLightnings.iterator();", "Iterator<PendingLightning> it = active.pendingLightnings.iterator();")
-                  content = content.replace("Iterator it = active.hailstones.iterator();", "Iterator<HailProjectile> it = active.hailstones.iterator();")
-                  content = content.replace("Iterator it = active.temporaryWater.iterator();", "Iterator<BlockPos> it = active.temporaryWater.iterator();")
-                  content = content.replace("final List meteors =", "final List<MeteorProjectile> meteors =")
-                  content = content.replace("final List hailstones =", "final List<HailProjectile> hailstones =")
-                  content = content.replace("final List pendingLightnings =", "final List<PendingLightning> pendingLightnings =")
-                  content = content.replace("final List recentBolts =", "final List<BoltFlash> recentBolts =")
-                  content = content.replace("final List temporaryWater =", "final List<BlockPos> temporaryWater =")
+                  content = re.sub(r"Map<ResourceKey,\s*ActiveDisaster>", "Map<ResourceKey<Level>, ActiveDisaster>", content)
+                  content = re.sub(r"Iterator\s+bit\s*=\s*active\.recentBolts\.iterator\(\);", "Iterator<BoltFlash> bit = active.recentBolts.iterator();", content)
+                  content = re.sub(r"Iterator\s+it\s*=\s*active\.meteors\.iterator\(\);", "Iterator<MeteorProjectile> it = active.meteors.iterator();", content)
+                  content = re.sub(r"Iterator\s+it\s*=\s*active\.pendingLightnings\.iterator\(\);", "Iterator<PendingLightning> it = active.pendingLightnings.iterator();", content)
+                  content = re.sub(r"Iterator\s+it\s*=\s*active\.hailstones\.iterator\(\);", "Iterator<HailProjectile> it = active.hailstones.iterator();", content)
+                  content = re.sub(r"Iterator\s+it\s*=\s*active\.temporaryWater\.iterator\(\);", "Iterator<BlockPos> it = active.temporaryWater.iterator();", content)
+                  content = re.sub(r"final\s+List\s+meteors\s*=", "final List<MeteorProjectile> meteors =", content)
+                  content = re.sub(r"final\s+List\s+hailstones\s*=", "final List<HailProjectile> hailstones =", content)
+                  content = re.sub(r"final\s+List\s+pendingLightnings\s*=", "final List<PendingLightning> pendingLightnings =", content)
+                  content = re.sub(r"final\s+List\s+recentBolts\s*=", "final List<BoltFlash> recentBolts =", content)
+                  content = re.sub(r"final\s+List\s+temporaryWater\s*=", "final List<BlockPos> temporaryWater =", content)
               elif path.endswith("ClientDisasterState.java"):
-                  content = content.replace("final List bolts =", "final List<ProceduralBolt> bolts =")
-                  content = content.replace("Iterator it = bolts.iterator();", "Iterator<ProceduralBolt> it = bolts.iterator();")
-                  content = content.replace("final List segments =", "final List<BoltSegment> segments =")
+                  content = re.sub(r"final\s+List\s+bolts\s*=", "final List<ProceduralBolt> bolts =", content)
+                  content = re.sub(r"Iterator\s+it\s*=\s*bolts\.iterator\(\);", "Iterator<ProceduralBolt> it = bolts.iterator();", content)
+                  content = re.sub(r"final\s+List\s+segments\s*=", "final List<BoltSegment> segments =", content)
 
               os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
               with open(path, "w", encoding="utf-8") as out:

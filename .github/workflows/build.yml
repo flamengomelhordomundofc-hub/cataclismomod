@@ -1,0 +1,95 @@
+name: Compilar Mod JAR
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar arquivos do repositorio
+        uses: actions/checkout@v4
+
+      - name: Extrair projeto e corrigir erros de compilacao
+        run: |
+          python3 - << 'EOF'
+          import json, os, glob
+
+          source_file = None
+          data = None
+          for f in glob.glob("*"):
+              if os.path.isfile(f) and f.endswith((".txt", ".json")):
+                  try:
+                      with open(f, "r", encoding="utf-8") as fp:
+                          candidate = json.load(fp)
+                      if "arquivos_do_projeto" in candidate:
+                          source_file = f
+                          data = candidate
+                          break
+                  except Exception:
+                      pass
+
+          if not source_file:
+              raise SystemExit("Erro: arquivo JSON do projeto nao encontrado na raiz do repositorio.")
+
+          print(f"Extraindo projeto de: {source_file}")
+          for item in data["arquivos_do_projeto"]:
+              path = item["caminho"]
+              content = item["conteudo"]
+
+              if path == "build.gradle":
+                  content = content.replace(
+                      "forge:{minecraft_version}-{forge_version}",
+                      "forge:${minecraft_version}-${forge_version}"
+                  )
+              elif path.endswith("CataclismoMod.java"):
+                  content = content.replace("DeferredRegister ITEMS", "DeferredRegister<Item> ITEMS")
+                  content = content.replace("RegistryObject DISASTER_CONTROLLER", "RegistryObject<Item> DISASTER_CONTROLLER")
+              elif path.endswith("DisasterControllerItem.java"):
+                  content = content.replace("InteractionResultHolder use(", "InteractionResultHolder<ItemStack> use(")
+                  content = content.replace("List tooltip,", "List<Component> tooltip,")
+              elif path.endswith("DisasterManager.java"):
+                  content = content.replace("Map<ResourceKey, ActiveDisaster>", "Map<ResourceKey<Level>, ActiveDisaster>")
+                  content = content.replace("Iterator bit = active.recentBolts.iterator();", "Iterator<BoltFlash> bit = active.recentBolts.iterator();")
+                  content = content.replace("Iterator it = active.meteors.iterator();", "Iterator<MeteorProjectile> it = active.meteors.iterator();")
+                  content = content.replace("Iterator it = active.pendingLightnings.iterator();", "Iterator<PendingLightning> it = active.pendingLightnings.iterator();")
+                  content = content.replace("Iterator it = active.hailstones.iterator();", "Iterator<HailProjectile> it = active.hailstones.iterator();")
+                  content = content.replace("Iterator it = active.temporaryWater.iterator();", "Iterator<BlockPos> it = active.temporaryWater.iterator();")
+                  content = content.replace("final List meteors =", "final List<MeteorProjectile> meteors =")
+                  content = content.replace("final List hailstones =", "final List<HailProjectile> hailstones =")
+                  content = content.replace("final List pendingLightnings =", "final List<PendingLightning> pendingLightnings =")
+                  content = content.replace("final List recentBolts =", "final List<BoltFlash> recentBolts =")
+                  content = content.replace("final List temporaryWater =", "final List<BlockPos> temporaryWater =")
+              elif path.endswith("ClientDisasterState.java"):
+                  content = content.replace("final List bolts =", "final List<ProceduralBolt> bolts =")
+                  content = content.replace("Iterator it = bolts.iterator();", "Iterator<ProceduralBolt> it = bolts.iterator();")
+                  content = content.replace("final List segments =", "final List<BoltSegment> segments =")
+
+              os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+              with open(path, "w", encoding="utf-8") as out:
+                  out.write(content)
+              print(f"Criado: {path}")
+          EOF
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Configurar Gradle 8.8
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.8'
+
+      - name: Compilar JAR
+        run: gradle build --no-daemon
+
+      - name: Salvar JAR para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: cataclismomod-2.0.0-jar
+          path: build/libs/*.jar
